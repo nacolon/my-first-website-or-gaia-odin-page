@@ -11,19 +11,13 @@
       font-family: 'Raleway', sans-serif;
       background: linear-gradient(135deg, #1e1f26, #3b3f51);
       color: #f4f4f4;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      scroll-behavior: smooth;
     }
 
     .container {
-      max-width: 700px;
-      background-color: rgba(255, 255, 255, 0.05);
-      padding: 40px;
-      margin-top: 80px;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      max-width: 800px;
+      margin: auto;
+      padding: 60px 20px;
       text-align: center;
     }
 
@@ -36,36 +30,120 @@
     }
 
     h1 {
-      margin-bottom: 10px;
-      font-size: 2.5em;
+      font-size: 2.6em;
       color: #66ffcc;
     }
 
-    .bio {
-      font-size: 1.1em;
-      line-height: 1.6;
-    }
-
-    a {
+    .typing {
+      font-size: 1.2em;
       color: #99ccff;
-      text-decoration: none;
+      min-height: 40px;
     }
 
-    a:hover {
-      text-decoration: underline;
+    nav {
+      margin-top: 20px;
+    }
+
+    nav a {
+      color: #fff;
+      margin: 0 10px;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    nav a:hover {
+      background: #66ffcc22;
+    }
+
+    section {
+      margin-top: 80px;
+    }
+
+    .quote {
+      font-style: italic;
+      color: #ccc;
+      margin-top: 20px;
+    }
+
+    footer {
+      margin-top: 80px;
+      font-size: 0.9em;
+      color: #888;
     }
   </style>
 </head>
 <body>
+
   <div class="container">
     <img src="3872F531-3716-4F46-88DC-B717FF223417.png" alt="Profile Picture" class="profile">
     <h1>Nacolon's World</h1>
-    <div class="bio">
-      <p>Learning to code — one spell at a time.</p>
-      <p>Guided by Gaia’s calm and Odin’s wisdom.</p>
-      <p>This is my first web page, powered by GitHub Pages.</p>
-    </div>
-    <p><a href="https://github.com/nacolon" target="_blank">Visit my GitHub Profile</a></p>
+    <div class="typing" id="typewriter"></div>
+
+    <nav>
+      <a href="#about">About</a>
+      <a href="#goals">Goals</a>
+      <a href="#myth">Mythology</a>
+      <a href="#links">Links</a>
+    </nav>
+
+    <section id="about">
+      <h2>About Me</h2>
+      <p>I'm learning to code — guided by nature and mythology.</p>
+    </section>
+
+    <section id="goals">
+      <h2>Learning Goals</h2>
+      <ul>
+        <li>Master HTML & CSS</li>
+        <li>Build interactive websites</li>
+        <li>Explore JavaScript magic</li>
+      </ul>
+    </section>
+
+    <section id="myth">
+      <h2>Inspired by Myth</h2>
+      <p>“From the well of wisdom, the roots of the world grow.”</p>
+      <div class="quote" id="rotating-quote">“Odin gave his eye, but gained vision.”</div>
+    </section>
+
+    <section id="links">
+      <h2>Links</h2>
+      <p><a href="https://github.com/nacolon" target="_blank">GitHub Profile</a></p>
+    </section>
+
+    <footer>
+      &copy; 2025 Nacolon • Built with code and myth
+    </footer>
   </div>
+
+  <script>
+    // Typing Effect
+    const text = "Learning to code with the calm of Gaia and the wisdom of Odin.";
+    let i = 0;
+    function typeWriter() {
+      if (i < text.length) {
+        document.getElementById("typewriter").innerHTML += text.charAt(i);
+        i++;
+        setTimeout(typeWriter, 50);
+      }
+    }
+    typeWriter();
+
+    // Quote Rotator
+    const quotes = [
+      "“Odin gave his eye, but gained vision.”",
+      "“Gaia grows in silence — so do you.”",
+      "“The tree of knowledge takes time to root.”",
+      "“Even gods learn in steps.”"
+    ];
+    let qIndex = 0;
+    setInterval(() => {
+      qIndex = (qIndex + 1) % quotes.length;
+      document.getElementById("rotating-quote").innerText = quotes[qIndex];
+    }, 5000);
+  </script>
+
 </body>
 </html>
