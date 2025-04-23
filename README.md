@@ -1,1 +1,1 @@
-# my-first-website-or-gaia-odin-page
+# code-of-odin-page
