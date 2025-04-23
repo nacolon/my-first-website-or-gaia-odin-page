@@ -1,48 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Nacolon's World</title>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f0f5;
-      color: #333;
-      text-align: center;
-      padding: 50px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Raleway', sans-serif;
+      background: linear-gradient(135deg, #1e1f26, #3b3f51);
+      color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    .container {
+      max-width: 700px;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 40px;
+      margin-top: 80px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
     img.profile {
-      width: 160px;
-      height: 160px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
-      border: 4px solid #4CAF50;
+      border: 3px solid #66ffcc;
       margin-bottom: 20px;
     }
+
     h1 {
-      color: #4CAF50;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      color: #66ffcc;
     }
+
+    .bio {
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+
     a {
-      color: #0066cc;
+      color: #99ccff;
       text-decoration: none;
     }
+
     a:hover {
       text-decoration: underline;
-    }
-    .bio {
-      max-width: 500px;
-      margin: 0 auto;
-      font-size: 1.1em;
     }
   </style>
 </head>
 <body>
-  <img src="3872F531-3716-4F46-88DC-B717FF223417.png" alt="Profile Picture" class="profile">
-
-  <h1>Welcome to Nacolon's World</h1>
-  <div class="bio">
-    <p>I'm learning to code — slowly but surely.</p>
-    <p>Inspired by Gaia's nature and Odin's wisdom.</p>
-    <p>This is my first web page, hosted with GitHub Pages!</p>
+  <div class="container">
+    <img src="3872F531-3716-4F46-88DC-B717FF223417.png" alt="Profile Picture" class="profile">
+    <h1>Nacolon's World</h1>
+    <div class="bio">
+      <p>Learning to code — one spell at a time.</p>
+      <p>Guided by Gaia’s calm and Odin’s wisdom.</p>
+      <p>This is my first web page, powered by GitHub Pages.</p>
+    </div>
+    <p><a href="https://github.com/nacolon" target="_blank">Visit my GitHub Profile</a></p>
   </div>
-  <p><a href="https://github.com/nacolon" target="_blank">Visit my GitHub profile</a></p>
 </body>
 </html>
