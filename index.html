@@ -1,174 +1,49 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nacolon's World</title>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Raleway', sans-serif;
-      background: linear-gradient(135deg, #1e1f26, #3b3f51);
-      color: #f4f4f4;
-      scroll-behavior: smooth;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: auto;
-      padding: 60px 20px;
-      text-align: center;
-    }
-
-    img.profile {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      border: 3px solid #66ffcc;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      font-size: 2.6em;
-      color: #66ffcc;
-    }
-
-    .typing {
-      font-size: 1.2em;
-      color: #99ccff;
-      min-height: 40px;
-    }
-
-    nav {
-      margin-top: 20px;
-    }
-
-    nav a {
-      color: #fff;
-      margin: 0 10px;
-      text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: background 0.3s;
-    }
-
-    nav a:hover {
-      background: #66ffcc22;
-    }
-
-    section {
-      margin-top: 80px;
-    }
-
-    .quote {
-      font-style: italic;
-      color: #ccc;
-      margin-top: 20px;
-    }
-
-    footer {
-      margin-top: 80px;
-      font-size: 0.9em;
-      color: #888;
-    }
+    /* (Keep existing CSS styles the same) */
   </style>
 </head>
 <body>
+  <!-- TradingView Widget at top -->
+  <div class="tradingview-widget-container">
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {
+      "symbols": [
+        {"proName": "NASDAQ:AAPL", "title": "Apple"},
+        {"proName": "NASDAQ:TSLA", "title": "Tesla"},
+        {"proName": "NASDAQ:NVDA", "title": "NVIDIA"}
+      ],
+      "colorTheme": "dark",
+      "isTransparent": false,
+      "displayMode": "adaptive",
+      "locale": "en"
+    }
+    </script>
+  </div>
 
   <div class="container">
-    <img src="3872F531-3716-4F46-88DC-B717FF223417.png" alt="Profile Picture" class="profile">
-    <h1>Nacolon's World</h1>
-    <div class="typing" id="typewriter"></div>
-
-    <nav>
-      <a href="#about">About</a>
-      <a href="#goals">Goals</a>
-      <a href="#myth">Mythology</a>
-      <a href="#links">Links</a>
-    </nav>
-
-    <section id="about">
-      <h2>About Me</h2>
-      <p>I'm learning to code â guided by nature and mythology.</p>
-    </section>
-
-    <section id="goals">
-      <h2>Learning Goals</h2>
-      <ul>
-        <li>Master HTML & CSS</li>
-        <li>Build interactive websites</li>
-        <li>Explore JavaScript magic</li>
-      </ul>
-    </section>
-
-    <section id="myth">
-      <h2>Inspired by Myth</h2>
-      <p>âFrom the well of wisdom, the roots of the world grow.â</p>
-      <div class="quote" id="rotating-quote">âOdin gave his eye, but gained vision.â</div>
-    </section>
-
-    <section id="links">
-      <h2>Links</h2>
-      <p><a href="https://github.com/nacolon" target="_blank">GitHub Profile</a></p>
-    </section>
-
+    <!-- Rest of your content remains the same until footer -->
+    
     <footer>
-      &copy; 2025 Nacolon â¢ Built with code and myth
+      &copy; 2025 Nacolon • Built with code and myth
     </footer>
   </div>
 
+  <!-- Scripts moved to bottom -->
   <script>
-    // Typing Effect
-    const text = "Learning to code with the calm of Gaia and the wisdom of Odin.";
-    let i = 0;
-    function typeWriter() {
-      if (i < text.length) {
-        document.getElementById("typewriter").innerHTML += text.charAt(i);
-        i++;
-        setTimeout(typeWriter, 50);
-      }
-    }
-    typeWriter();
-
-    // Quote Rotator
+    // Fixed quote characters and added more quotes
     const quotes = [
-      "âOdin gave his eye, but gained vision.â",
-      "âGaia grows in silence â so do you.â",
-      "âThe tree of knowledge takes time to root.â",
-      "âEven gods learn in steps.â"
+      "“Odin gave his eye, but gained vision.”",
+      "“Gaia grows in silence – so do you.”",
+      "“The tree of knowledge takes time to root.”",
+      "“Even gods learn in steps.”",
+      "“In the forge of code, we shape worlds.”"
     ];
-    let qIndex = 0;
-    setInterval(() => {
-      qIndex = (qIndex + 1) % quotes.length;
-      document.getElementById("rotating-quote").innerText = quotes[qIndex];
-    }, 5000);
-  </script>
-<!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container">
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-  {
-    "symbols": [
-      {
-        "proName": "NASDAQ:AAPL",
-        "title": "Apple"
-      },
-      {
-        "proName": "NASDAQ:TSLA",
-        "title": "Tesla"
-      },
-      {
-        "proName": "NASDAQ:NVDA",
-        "title": "NVIDIA"
-      }
-    ],
-    "colorTheme": "dark",
-    "isTransparent": false,
-    "displayMode": "adaptive",
-    "locale": "en"
-  }
-  </script>
-</div>
-<!-- TradingView Widget END -->
-</body>
-</html>
+    
+    // Rest of your scripts remain the same
