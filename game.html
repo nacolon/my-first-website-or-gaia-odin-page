@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
+      color-scheme: dark;
       --bg: #070a1c;
       --panel: #0f1433f0;
       --accent: #8cc8ff;
@@ -216,6 +217,10 @@
       <div>
         <button class="ghost" id="cardBtn">📸 Imagen para postear</button>
         <button class="ghost" id="shareBtn">📤 Compartir</button>
+      </div>
+      <div id="cardBox" hidden>
+        <img id="cardImg" alt="Tu tarjeta de puntuación" style="width:100%;border-radius:12px;margin-top:8px">
+        <p class="hint" style="margin-top:4px">Mantén presionada la imagen (o clic derecho) para guardarla y postearla.</p>
       </div>
       <div class="list" id="oMissions"></div>
       <button id="againBtn">↻ Otra vez</button>
@@ -959,6 +964,7 @@
     const score = Math.floor(G.score);
     const reached = won ? 'Apolo 🏆' : G.phase === 'boss' ? 'Apolo' : `Sector ${G.sector + 1}`;
     lastRun = { score, won, reached, saved: false };
+    $('cardBox').hidden = true;
     if (score > save.best) save.best = score;
     if (won) save.wins++;
     const earned = G.dust + Math.floor(score / 150);
@@ -1047,11 +1053,14 @@
   async function downloadCard() {
     if (!lastRun) return;
     const b = await cardBlob(); if (!b) return toast('No se pudo crear la imagen');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = `outs-of-space-${lastRun.score}.png`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    toast('Imagen descargada 📸');
+    const url = URL.createObjectURL(b);
+    $('cardImg').src = url; $('cardBox').hidden = false;
+    $('cardBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    try {
+      const a = document.createElement('a');
+      a.href = url; a.download = `outs-of-space-${lastRun.score}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) {}
   }
   async function share() {
     if (!lastRun) return;
