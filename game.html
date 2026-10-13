@@ -140,6 +140,16 @@
       background: #000c; color: var(--text); padding: 10px 16px; border-radius: 10px;
       font-weight: 700; display: none;
     }
+    .vol {
+      display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center;
+      text-align: left; font-size: .9em; margin: 14px 0 6px; padding: 12px; border-radius: 12px; background: #ffffff0d;
+    }
+    .vol label span { color: var(--muted); font-size: .85em; }
+    .vol input { width: 100%; accent-color: var(--accent); }
+    #pauseBtn {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 4; display: none;
+      margin: 0; padding: 6px 12px; font-size: 1.1em; background: #ffffff1a; color: var(--text); border: 1px solid #ffffff33;
+    }
     #muteBtn {
       position: fixed; right: 12px; bottom: 12px; z-index: 7;
       background: #ffffff14; color: var(--text); padding: 8px 12px; font-size: .9em;
@@ -166,6 +176,7 @@
     </div>
   </div>
   <div id="bossBar">APOLO<div class="track"><div class="fill" id="bossFill"></div></div></div>
+  <button id="pauseBtn" title="Pausa (P)" aria-label="Pausa">⏸</button>
   <button id="superBtn" title="Súper Aullido (Espacio)"><span>🐺</span>AULLIDO</button>
 
   <!-- Menú -->
@@ -189,6 +200,12 @@
       <button id="playBtn">▶ Jugar</button>
       <button class="ghost" id="shopBtn">Mejoras</button>
       <button class="ghost" id="fameBtn">🏆 Récords</button>
+      <div class="vol">
+        <label for="mMusic">🎵 Música <span id="mMusicVal"></span></label>
+        <input type="range" id="mMusic" class="vMusic" min="0" max="100" step="5">
+        <label for="mSfx">💥 Efectos <span id="mSfxVal"></span></label>
+        <input type="range" id="mSfx" class="vSfx" min="0" max="100" step="5">
+      </div>
       <p class="hint">Arrastra el dedo o mueve el ratón · flechas / WASD · Espacio = Súper Aullido · P = pausa</p>
       <a class="back" href="index.html">← Volver a Nacolon's World</a>
     </div>
@@ -265,7 +282,14 @@
     <div class="card">
       <h2>Pausa</h2>
       <button id="resumeBtn">▶ Seguir</button>
+      <button class="gold" id="restartBtn">↻ Empezar de nuevo</button>
       <button class="ghost" id="quitBtn">Salir al menú</button>
+      <div class="vol">
+        <label for="pMusic">🎵 Música <span id="pMusicVal"></span></label>
+        <input type="range" id="pMusic" class="vMusic" min="0" max="100" step="5">
+        <label for="pSfx">💥 Efectos <span id="pSfxVal"></span></label>
+        <input type="range" id="pSfx" class="vSfx" min="0" max="100" step="5">
+      </div>
     </div>
   </div>
 
@@ -286,6 +310,7 @@
   // ---------- Guardado (localStorage puede fallar: siempre en try/catch) ----------
   const KEY = 'outs-of-space-v1';
   const defaults = {
+    musicVol: 45, sfxVol: 80,
     best: 0, dust: 0, games: 0, wins: 0, streak: 0, lastDay: '', muted: false, lastName: '',
     up: { bark: 0, lives: 0, power: 0, howl: 0, magnet: 0 },
     missions: null, missionLevel: 0, board: []
@@ -344,7 +369,8 @@
   // ---------- Audio ----------
   let actx = null;
   function beep(freq, dur = 0.08, type = 'sine', vol = 0.08, slide = 0) {
-    if (save.muted) return;
+    if (save.muted || !save.sfxVol) return;
+    vol *= save.sfxVol / 80;
     try {
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
       const o = actx.createOscillator(), g = actx.createGain();
@@ -358,12 +384,31 @@
   }
   // ---------- Música (archivos en assets/) ----------
   const MUSIC = { area: new Audio('assets/musica-area.mp3'), boss: new Audio('assets/musica-jefe.mp3') };
-  Object.values(MUSIC).forEach(a => { a.loop = true; a.volume = 0.45; a.preload = 'auto'; });
-  let track = null;
+  Object.values(MUSIC).forEach(a => { a.loop = true; a.preload = 'auto'; });
+  let track = null, musicGain = null;
+  // En iPhone el volumen de <audio> no se puede cambiar; por eso la música pasa por un GainNode
+  // (solo en http/https: desde file:// el navegador lo silenciaría).
+  function ensureAudio() {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      if (!musicGain && /^https?:$/.test(location.protocol)) {
+        musicGain = actx.createGain(); musicGain.connect(actx.destination);
+        Object.values(MUSIC).forEach(a => actx.createMediaElementSource(a).connect(musicGain));
+      }
+    } catch (e) {}
+    applyVolumes();
+  }
+  function applyVolumes() {
+    const v = save.muted ? 0 : save.musicVol / 100;
+    if (musicGain) { musicGain.gain.value = v; Object.values(MUSIC).forEach(a => a.volume = 1); }
+    else Object.values(MUSIC).forEach(a => a.volume = v);
+  }
+  applyVolumes();
   function playMusic(name) {
     Object.entries(MUSIC).forEach(([k, a]) => { if (k !== name) { a.pause(); } });
     track = name;
-    if (!name || save.muted) return;
+    if (!name || save.muted || !save.musicVol) return;
     const a = MUSIC[name];
     if (a.error) return;
     const p = a.play(); if (p && p.catch) p.catch(() => {});
@@ -373,10 +418,29 @@
 
   const syncMute = () => $('muteBtn').textContent = save.muted ? '🔇' : '🔊';
   $('muteBtn').onclick = () => {
-    save.muted = !save.muted; persist(); syncMute();
+    save.muted = !save.muted; persist(); syncMute(); applyVolumes();
     if (save.muted) pauseMusic(); else if (state === 'play') playMusic(track);
   };
   syncMute();
+
+  // Controles de volumen (menú y pausa)
+  function syncVolumeUI() {
+    document.querySelectorAll('.vMusic').forEach(i => i.value = save.musicVol);
+    document.querySelectorAll('.vSfx').forEach(i => i.value = save.sfxVol);
+    ['m', 'p'].forEach(pre => {
+      $(pre + 'MusicVal').textContent = save.musicVol + '%';
+      $(pre + 'SfxVal').textContent = save.sfxVol + '%';
+    });
+  }
+  document.querySelectorAll('.vMusic').forEach(i => i.addEventListener('input', () => {
+    save.musicVol = +i.value; ensureAudio(); syncVolumeUI(); persist();
+    if (!save.musicVol) pauseMusic();
+  }));
+  document.querySelectorAll('.vSfx').forEach(i => i.addEventListener('input', () => {
+    save.sfxVol = +i.value; syncVolumeUI(); persist();
+  }));
+  document.querySelectorAll('.vSfx').forEach(i => i.addEventListener('change', () => beep(660, 0.12, 'triangle', 0.08)));
+  syncVolumeUI();
 
   function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.style.display = 'block';
@@ -956,6 +1020,7 @@
     const inGame = state === 'play' || state === 'pause';
     $('hud').style.display = inGame ? 'flex' : 'none';
     $('superBtn').style.display = inGame ? 'block' : 'none';
+    $('pauseBtn').style.display = state === 'play' ? 'block' : 'none';
     if (!inGame) $('bossBar').style.display = 'none';
   }
 
@@ -990,6 +1055,7 @@
   }
 
   function start() {
+    ensureAudio();
     restartMusic('area');
     newGame(); state = 'play'; showOnly(null); last = performance.now();
     beep(330, 0.2, 'triangle', 0.06, 330);
@@ -1152,6 +1218,8 @@
   $('menuBtn').onclick = showMenu;
   $('resumeBtn').onclick = togglePause;
   $('quitBtn').onclick = showMenu;
+  $('restartBtn').onclick = start;
+  $('pauseBtn').addEventListener('pointerdown', e => { e.stopPropagation(); togglePause(); });
   $('saveBtn').onclick = saveScore;
   $('cardBtn').onclick = downloadCard;
   $('shareBtn').onclick = share;
