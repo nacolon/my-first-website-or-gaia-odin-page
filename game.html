@@ -3,18 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Gaia: Out of Space</title>
+  <title>Outs of Space: Gaia vs Apolo</title>
+  <meta name="description" content="Ayuda a Gaia, la perrita astronauta, a esquivar meteoritos y derrotar a Apolo.">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0c12;
-      --panel: #1e1f26ee;
-      --accent: #66ffcc;
-      --accent2: #99ccff;
-      --gold: #f2d49b;
-      --danger: #ff6b6b;
-      --text: #f4f4f4;
-      --muted: #9aa0b4;
+      --bg: #070a1c;
+      --panel: #0f1433f0;
+      --accent: #8cc8ff;
+      --accent2: #c9a7ff;
+      --gold: #ffcf6b;
+      --fire: #ff9a3c;
+      --danger: #ff4d5e;
+      --text: #f4f6ff;
+      --muted: #9aa3c7;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -33,46 +35,72 @@
     }
     #hud .big { font-size: 1.6em; color: var(--accent); }
     #hud .small { font-size: .85em; color: var(--muted); }
-    #combo { color: var(--gold); font-size: 1.1em; min-height: 1.3em; }
+    #combo { color: var(--gold); font-size: 1.05em; min-height: 1.3em; }
     #lives { font-size: 1.2em; letter-spacing: 2px; }
     #power { color: var(--accent2); font-size: .9em; min-height: 1.2em; }
+    #sector { color: var(--muted); font-size: .8em; }
+
+    #bossBar {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      width: min(360px, calc(100% - 210px)); display: none; pointer-events: none;
+      text-align: center; font-weight: 900; font-size: .8em; color: var(--danger);
+      text-shadow: 0 2px 4px #000; letter-spacing: 2px;
+    }
+    #bossBar .track { height: 10px; border-radius: 6px; background: #ffffff1a; overflow: hidden; margin-top: 4px; border: 1px solid #ff4d5e66; }
+    #bossBar .fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d5e, #ff9a3c); transition: width .15s; }
+
+    #superBtn {
+      position: fixed; left: 16px; bottom: 16px; z-index: 4; display: none;
+      width: 76px; height: 76px; border-radius: 50%; padding: 0; margin: 0;
+      font-size: .7em; line-height: 1.1; color: var(--text);
+      background: conic-gradient(var(--accent2) var(--pct, 0%), #ffffff14 0);
+      border: 2px solid #ffffff33;
+    }
+    #superBtn.ready { animation: glow .6s infinite alternate; color: #070a1c; background: var(--accent2); }
+    #superBtn span { font-size: 1.9em; display: block; }
+    @keyframes glow { from { box-shadow: 0 0 6px var(--accent2); } to { box-shadow: 0 0 26px var(--accent2); } }
 
     .overlay {
-      position: fixed; inset: 0; display: none;
+      position: fixed; inset: 0; display: none; z-index: 6;
       align-items: center; justify-content: center;
-      background: radial-gradient(circle at 50% 40%, #1e1f26cc, #05060acc);
+      background: radial-gradient(circle at 50% 40%, #141a45cc, #03040acc);
       padding: 16px; overflow-y: auto;
     }
     .overlay.show { display: flex; }
     .card {
-      width: 100%; max-width: 420px; text-align: center;
-      background: var(--panel); border: 1px solid #66ffcc33;
-      border-radius: 18px; padding: 24px 20px;
+      width: 100%; max-width: 440px; text-align: center; margin: auto;
+      background: var(--panel); border: 1px solid #8cc8ff33;
+      border-radius: 18px; padding: 22px 18px;
       box-shadow: 0 10px 40px #000a;
     }
-    h1 { margin: 0 0 4px; font-size: 2.2em; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
-    h2 { margin: 0 0 12px; color: var(--accent); }
-    .sub { color: var(--accent2); margin: 0 0 16px; }
-    .stats { display: flex; justify-content: space-around; margin: 14px 0; }
+    .logo { width: 100%; max-width: 300px; height: 170px; object-fit: cover; object-position: 50% 52%; border-radius: 14px; display: block; margin: 0 auto 8px; }
+    .hero { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); margin: -4px auto 8px; display: block; }
+    h2 { margin: 0 0 10px; color: var(--accent); }
+    .sub { color: var(--accent2); margin: 0 0 12px; font-weight: 700; }
+    p { line-height: 1.45; }
+    .stats { display: flex; justify-content: space-around; margin: 12px 0; }
     .stats div { font-size: .8em; color: var(--muted); }
-    .stats b { display: block; font-size: 1.6em; color: var(--text); }
+    .stats b { display: block; font-size: 1.5em; color: var(--text); }
     button {
       font-family: inherit; font-weight: 700; font-size: 1.05em;
       border: 0; border-radius: 12px; padding: 12px 20px; margin: 6px 4px;
-      cursor: pointer; color: #0b0c12; background: var(--accent);
+      cursor: pointer; color: #070a1c; background: var(--accent);
       transition: transform .1s, filter .2s;
     }
     button:hover { filter: brightness(1.1); }
     button:active { transform: scale(.96); }
     button.ghost { background: transparent; color: var(--text); border: 1px solid #ffffff33; }
+    button.gold { background: var(--gold); }
     button:disabled { opacity: .4; cursor: default; }
-    .missions { text-align: left; margin: 14px 0 6px; }
-    .mission {
+    .list { text-align: left; margin: 12px 0 6px; }
+    .label { font-size: .8em; color: var(--muted); margin-bottom: 4px; }
+    .row {
       display: flex; justify-content: space-between; gap: 10px; align-items: center;
-      padding: 8px 10px; margin: 6px 0; border-radius: 10px; background: #ffffff0d; font-size: .9em;
+      padding: 8px 10px; margin: 5px 0; border-radius: 10px; background: #ffffff0d; font-size: .9em;
     }
-    .mission.done { background: #66ffcc22; color: var(--accent); }
-    .mission .rw { color: var(--gold); white-space: nowrap; font-weight: 700; }
+    .row.done { background: #8cc8ff22; color: var(--accent); }
+    .row.me { background: #ffcf6b2a; color: var(--gold); font-weight: 700; }
+    .rw { color: var(--gold); white-space: nowrap; font-weight: 700; }
     .dust { color: var(--gold); font-weight: 700; }
     .shop-item {
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
@@ -81,12 +109,32 @@
     .shop-item small { color: var(--muted); display: block; }
     .pips { color: var(--accent); letter-spacing: 2px; font-size: .8em; }
     .shop-item button { margin: 0; padding: 8px 12px; font-size: .9em; min-width: 84px; }
-    .hint { color: var(--muted); font-size: .8em; margin-top: 12px; }
-    .newbest { color: var(--gold); font-weight: 900; animation: pulse .8s infinite alternate; }
-    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+    .hint { color: var(--muted); font-size: .8em; margin-top: 10px; }
+    .big-title { font-size: 1.6em; font-weight: 900; margin: 0 0 6px; }
+    .win { color: var(--gold); animation: pulse .8s infinite alternate; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
     a.back { color: var(--muted); font-size: .85em; }
+    .name-box { display: flex; gap: 6px; margin: 10px 0; }
+    .name-box input {
+      flex: 1; min-width: 0; font: inherit; font-weight: 700; font-size: 1.05em;
+      padding: 10px 12px; border-radius: 12px; border: 1px solid #ffffff33;
+      background: #ffffff10; color: var(--text); user-select: text; -webkit-user-select: text;
+    }
+    .name-box button { margin: 0; }
+    #bossIntro .card { max-width: 520px; padding: 0; overflow: hidden; border-color: #ff4d5e66; }
+    #bossIntro img { width: 100%; display: block; }
+    #bossIntro .txt { padding: 16px; }
+    #bossIntro h2 { color: var(--danger); font-size: 1.8em; margin: 0 0 6px; }
+    .invent { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 10px 0; font-size: .75em; color: var(--muted); }
+    .invent div { background: #ffffff0d; border-radius: 10px; padding: 8px 4px; }
+    .invent b { display: block; font-size: 1.6em; }
+    #toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9;
+      background: #000c; color: var(--text); padding: 10px 16px; border-radius: 10px;
+      font-weight: 700; display: none;
+    }
     #muteBtn {
-      position: fixed; right: 12px; bottom: 12px; z-index: 5;
+      position: fixed; right: 12px; bottom: 12px; z-index: 7;
       background: #ffffff14; color: var(--text); padding: 8px 12px; font-size: .9em;
     }
   </style>
@@ -102,45 +150,87 @@
     </div>
     <div style="text-align:right">
       <div id="lives"></div>
+      <div id="sector"></div>
       <div class="small">Récord <span id="hudBest">0</span></div>
-      <div class="small"><span class="dust" id="hudDust">0</span> ✦</div>
     </div>
   </div>
+  <div id="bossBar">APOLO<div class="track"><div class="fill" id="bossFill"></div></div></div>
+  <button id="superBtn" title="Súper Aullido (Espacio)"><span>🐺</span>AULLIDO</button>
 
   <!-- Menú -->
   <div class="overlay show" id="menu">
     <div class="card">
-      <h1>GAIA</h1>
-      <p class="sub">Out of Space</p>
-      <p style="margin:0 0 6px">Eres la última semilla de Gaia. Recoge polvo estelar, esquiva asteroides y lleva la vida más allá del espacio.</p>
+      <img class="logo" src="assets/logo.jpg" alt="Outs of Space">
+      <img class="hero" src="assets/gaia-head.png" alt="Gaia">
+      <p class="sub">Gaia vs Apolo</p>
+      <p style="margin:0 0 6px">Gaia, la perrita astronauta, viaja por el espacio. Esquiva los meteoritos, rompe todo lo que se cruce y llega hasta el agujero negro para derrotar a <b style="color:var(--danger)">Apolo</b>.</p>
+      <div class="invent">
+        <div><b>📣</b>Ladri-Cañón<br>dispara solo</div>
+        <div><b>🫧</b>Burbuja de Hueso<br>escudo</div>
+        <div><b>🐺</b>Súper Aullido<br>rompe todo</div>
+      </div>
       <div class="stats">
         <div><b id="mBest">0</b>Récord</div>
         <div><b class="dust" id="mDust">0</b>Polvo ✦</div>
         <div><b id="mStreak">0</b>Racha 🔥</div>
       </div>
-      <div class="missions" id="mMissions"></div>
+      <div class="list" id="mMissions"></div>
       <button id="playBtn">▶ Jugar</button>
       <button class="ghost" id="shopBtn">Mejoras</button>
-      <p class="hint">Arrastra el dedo / mueve el ratón · o usa las flechas / WASD · P para pausa</p>
+      <button class="ghost" id="fameBtn">🏆 Récords</button>
+      <p class="hint">Arrastra el dedo o mueve el ratón · flechas / WASD · Espacio = Súper Aullido · P = pausa</p>
       <a class="back" href="index.html">← Volver a Nacolon's World</a>
     </div>
   </div>
 
-  <!-- Game over -->
+  <!-- Intro del jefe -->
+  <div class="overlay" id="bossIntro">
+    <div class="card">
+      <img src="assets/apolo.jpg" alt="Apolo en su nave roja frente al agujero negro">
+      <div class="txt">
+        <h2>¡APOLO!</h2>
+        <p style="margin:0 0 10px">«Nadie escapa de mi agujero negro, Gaia. Tu viaje termina aquí.»</p>
+        <button class="gold" id="fightBtn">⚔️ ¡A pelear!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final de partida -->
   <div class="overlay" id="over">
     <div class="card">
-      <h2>La semilla se apagó</h2>
-      <div id="newBest"></div>
+      <div class="big-title" id="oTitle"></div>
+      <p class="hint" id="oSub" style="margin-top:0"></p>
       <div class="stats">
         <div><b id="oScore">0</b>Puntos</div>
-        <div><b id="oCombo">0</b>Combo máx</div>
+        <div><b id="oSector">-</b>Llegó a</div>
         <div><b class="dust" id="oDust">+0</b>Polvo ✦</div>
       </div>
-      <div id="oNear" class="hint" style="margin-top:0"></div>
-      <div class="missions" id="oMissions"></div>
+      <div id="saveBox">
+        <div class="label" id="saveMsg">¡Anota tu nombre en el Salón de la Fama!</div>
+        <div class="name-box">
+          <input id="nameInput" maxlength="14" placeholder="Tu nombre" autocomplete="nickname">
+          <button class="gold" id="saveBtn">Guardar</button>
+        </div>
+      </div>
+      <div class="list" id="oBoard"></div>
+      <div>
+        <button class="ghost" id="cardBtn">📸 Imagen para postear</button>
+        <button class="ghost" id="shareBtn">📤 Compartir</button>
+      </div>
+      <div class="list" id="oMissions"></div>
       <button id="againBtn">↻ Otra vez</button>
       <button class="ghost" id="overShopBtn">Mejoras</button>
       <button class="ghost" id="menuBtn">Menú</button>
+    </div>
+  </div>
+
+  <!-- Salón de la fama -->
+  <div class="overlay" id="fame">
+    <div class="card">
+      <h2>🏆 Salón de la Fama</h2>
+      <div class="list" id="fBoard"></div>
+      <p class="hint">Las puntuaciones se guardan en este dispositivo. Descarga tu imagen al terminar para postearla.</p>
+      <button class="ghost" id="fameBack">Volver</button>
     </div>
   </div>
 
@@ -164,41 +254,53 @@
     </div>
   </div>
 
+  <div id="toast"></div>
   <button id="muteBtn">🔊</button>
 
 <script>
 (() => {
-  // ---------- Persistencia (localStorage puede fallar: siempre en try/catch) ----------
-  const KEY = 'gaia-oos-v1';
+  const $ = id => document.getElementById(id);
+
+  // ---------- Imágenes ----------
+  const IMG = {};
+  [['logo', 'jpg'], ['gaia-head', 'png'], ['apolo-head', 'png']].forEach(([n, ext]) => {
+    const i = new Image(); i.src = `assets/${n}.${ext}`; IMG[n] = i;
+  });
+  const ready = i => i && i.complete && i.naturalWidth > 0;
+
+  // ---------- Guardado (localStorage puede fallar: siempre en try/catch) ----------
+  const KEY = 'outs-of-space-v1';
   const defaults = {
-    best: 0, dust: 0, games: 0, streak: 0, lastDay: '', muted: false,
-    up: { magnet: 0, shields: 0, power: 0, value: 0 },
-    missions: null, missionLevel: 0
+    best: 0, dust: 0, games: 0, wins: 0, streak: 0, lastDay: '', muted: false, lastName: '',
+    up: { bark: 0, lives: 0, power: 0, howl: 0, magnet: 0 },
+    missions: null, missionLevel: 0, board: []
   };
   let save;
   try { save = Object.assign({}, defaults, JSON.parse(localStorage.getItem(KEY)) || {}); }
   catch (e) { save = Object.assign({}, defaults); }
   save.up = Object.assign({}, defaults.up, save.up);
+  if (!Array.isArray(save.board)) save.board = [];
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) {} }
 
   // ---------- Mejoras ----------
   const UPGRADES = [
-    { id: 'magnet',  name: 'Raíces magnéticas', desc: 'Atrae el polvo cercano', base: 40,  max: 5 },
-    { id: 'shields', name: 'Corteza de Yggdrasil', desc: '+1 vida al empezar', base: 120, max: 3 },
-    { id: 'power',   name: 'Runas de Odín', desc: 'Los poderes duran más', base: 60,  max: 5 },
-    { id: 'value',   name: 'Cosecha estelar', desc: '+25% polvo por partida', base: 80,  max: 5 },
+    { id: 'bark',   name: '📣 Ladri-Cañón turbo', desc: 'Dispara ladridos sónicos más rápido', base: 50,  max: 5 },
+    { id: 'lives',  name: '🦴 Huesos extra', desc: '+1 vida al empezar', base: 120, max: 3 },
+    { id: 'howl',   name: '🐺 Súper Aullido', desc: 'Se carga más rápido', base: 70,  max: 5 },
+    { id: 'power',  name: '🫧 Poderes largos', desc: 'Escudo, triple y imán duran más', base: 60,  max: 5 },
+    { id: 'magnet', name: '🧲 Collar magnético', desc: 'Atrae el polvo estelar', base: 40,  max: 5 },
   ];
   const cost = u => Math.round(u.base * Math.pow(1.8, save.up[u.id]));
 
-  // ---------- Misiones (se renuevan al completarlas: el gancho para volver) ----------
+  // ---------- Misiones ----------
   const MISSION_POOL = [
-    { k: 'dust',  t: n => `Recoge ${n} polvo en una partida`, n: [25, 50, 90, 140, 200] },
-    { k: 'combo', t: n => `Llega a combo x${n}`, n: [10, 20, 35, 50, 75] },
-    { k: 'time',  t: n => `Sobrevive ${n} segundos`, n: [30, 60, 90, 120, 180] },
-    { k: 'near',  t: n => `Haz ${n} roces con asteroides`, n: [3, 6, 10, 15, 25] },
-    { k: 'score', t: n => `Consigue ${n} puntos`, n: [500, 1500, 3000, 6000, 10000] },
-    { k: 'runes', t: n => `Activa ${n} runa${n > 1 ? 's' : ''}`, n: [1, 2, 3, 5, 7] },
-    { k: 'seeds', t: n => `Recoge ${n} semilla${n > 1 ? 's' : ''} de vida`, n: [1, 2, 3, 4, 6] },
+    { k: 'dust',    t: n => `Recoge ${n} polvo estelar`, n: [20, 40, 70, 110, 160] },
+    { k: 'combo',   t: n => `Llega a combo x${n}`, n: [10, 20, 35, 50, 75] },
+    { k: 'meteors', t: n => `Rompe ${n} meteoritos`, n: [15, 30, 60, 100, 150] },
+    { k: 'near',    t: n => `Pasa rozando ${n} meteoritos`, n: [3, 6, 10, 15, 25] },
+    { k: 'score',   t: n => `Consigue ${n} puntos`, n: [1000, 3000, 6000, 10000, 15000] },
+    { k: 'sector',  t: n => n >= 4 ? 'Llega hasta Apolo' : `Llega al sector ${n}`, n: [2, 3, 4, 4, 4] },
+    { k: 'howls',   t: n => `Usa el Súper Aullido ${n} ${n > 1 ? 'veces' : 'vez'}`, n: [1, 2, 3, 4, 5] },
   ];
   function newMission(exclude) {
     const opts = MISSION_POOL.filter(m => !exclude.includes(m.k));
@@ -206,30 +308,25 @@
     const tier = Math.min(4, Math.floor(save.missionLevel / 3));
     return { k: m.k, n: m.n[tier], reward: 30 + tier * 30, done: false };
   }
-  function ensureMissions() {
-    if (!Array.isArray(save.missions) || save.missions.length !== 3) {
-      save.missions = [];
-      for (let i = 0; i < 3; i++) save.missions.push(newMission(save.missions.map(m => m.k)));
-    }
+  if (!Array.isArray(save.missions) || save.missions.length !== 3 || save.missions.some(m => !MISSION_POOL.find(p => p.k === m.k))) {
+    save.missions = [];
+    for (let i = 0; i < 3; i++) save.missions.push(newMission(save.missions.map(m => m.k)));
   }
   const missionText = m => MISSION_POOL.find(p => p.k === m.k).t(m.n);
-  ensureMissions();
 
   // ---------- Racha diaria ----------
-  const today = () => new Date().toISOString().slice(0, 10);
   function dailyCheck() {
-    const t = today();
+    const t = new Date().toISOString().slice(0, 10);
     if (save.lastDay === t) return 0;
     const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
     save.streak = save.lastDay === y ? save.streak + 1 : 1;
     save.lastDay = t;
     const bonus = Math.min(save.streak, 7) * 15;
-    save.dust += bonus;
-    persist();
+    save.dust += bonus; persist();
     return bonus;
   }
 
-  // ---------- Audio (WebAudio, sin archivos) ----------
+  // ---------- Audio ----------
   let actx = null;
   function beep(freq, dur = 0.08, type = 'sine', vol = 0.08, slide = 0) {
     if (save.muted) return;
@@ -244,174 +341,339 @@
       o.start(); o.stop(actx.currentTime + dur);
     } catch (e) {}
   }
-  const muteBtn = document.getElementById('muteBtn');
-  const syncMute = () => muteBtn.textContent = save.muted ? '🔇' : '🔊';
-  muteBtn.onclick = () => { save.muted = !save.muted; persist(); syncMute(); };
+  const syncMute = () => $('muteBtn').textContent = save.muted ? '🔇' : '🔊';
+  $('muteBtn').onclick = () => { save.muted = !save.muted; persist(); syncMute(); };
   syncMute();
 
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 2200);
+  }
+
   // ---------- Canvas ----------
-  const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-  let W = 0, H = 0, DPR = 1;
+  const cv = $('c'), ctx = cv.getContext('2d');
+  let W = 0, H = 0;
   function resize() {
-    DPR = Math.min(2, window.devicePixelRatio || 1);
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
     W = window.innerWidth; H = window.innerHeight;
     cv.width = W * DPR; cv.height = H * DPR;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
   window.addEventListener('resize', resize); resize();
 
-  const stars = Array.from({ length: 140 }, () => ({
-    x: Math.random(), y: Math.random(), z: Math.random() * 0.9 + 0.1
-  }));
+  const stars = Array.from({ length: 160 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random() * 0.9 + 0.1 }));
 
-  // ---------- Estado de juego ----------
+  // ---------- Juego ----------
+  const SECTORS = [
+    { name: 'Cinturón de Meteoritos', len: 30 },
+    { name: 'Nebulosa Violeta', len: 32 },
+    { name: 'Lluvia de Fuego', len: 34 },
+  ];
+  const ITEMS = { shield: '🫧', triple: '🔱', magnet: '🧲', bone: '🦴' };
+
   let state = 'menu', G = null, last = 0;
   const keys = {};
   const pointer = { active: false, x: 0, y: 0 };
+  const rand = (a, b) => a + Math.random() * (b - a);
 
   function newGame() {
-    const lives = 1 + save.up.shields;
+    const lives = 3 + save.up.lives;
     G = {
       t: 0, score: 0, dust: 0, combo: 0, maxCombo: 0, comboTimer: 0,
-      near: 0, runes: 0, seeds: 0,
+      near: 0, meteors: 0, howls: 0,
       lives, maxLives: lives + 2, inv: 0, shake: 0,
-      p: { x: W / 2, y: H * 0.75, r: 14, vx: 0, vy: 0 },
-      ents: [], parts: [], texts: [],
-      spawn: 0, power: { magnet: 0, shield: 0, slow: 0 },
+      p: { x: W / 2, y: H * 0.78, r: 22, vx: 0, vy: 0 },
+      ents: [], shots: [], enemyShots: [], parts: [], texts: [], waves: [],
+      spawn: 0, fire: 0, howl: 0,
+      power: { shield: 0, triple: 0, magnet: 0 },
+      phase: 'sector', sector: 0, st: 0, banner: null, boss: null,
     };
+    setBanner(`Sector 1`, SECTORS[0].name);
     pointer.active = false;
   }
 
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const difficulty = () => 1 + G.t / 35;
+  function setBanner(title, sub) { G.banner = { title, sub, life: 2.4 }; }
+  const difficulty = () => G.phase === 'boss' ? 1.8 : 1 + G.sector * 0.55 + G.st / 70;
+  const mult = () => 1 + Math.floor(G.combo / 10);
 
-  function spawn() {
+  // --- Generación ---
+  function spawnMeteor(big) {
     const d = difficulty();
-    const r = Math.random();
-    let e;
-    if (r < 0.02) e = { type: 'seed', r: 11 };
-    else if (r < 0.05) e = { type: 'rune', r: 13, kind: ['magnet', 'shield', 'slow'][Math.floor(Math.random() * 3)] };
-    else if (r < 0.05 + Math.min(0.5, 0.22 + d * 0.06)) e = { type: 'rock', r: rand(12, 18 + d * 5) };
-    else e = { type: 'dust', r: 6 };
-    e.x = rand(e.r, W - e.r);
-    e.y = -e.r - 10;
-    e.vy = rand(110, 170) * (0.75 + d * 0.25);
-    e.vx = e.type === 'rock' ? rand(-30, 30) * d * 0.5 : rand(-15, 15);
-    e.rot = Math.random() * 6; e.vr = rand(-2, 2);
-    e.near = false;
-    if (e.type === 'rock') {
-      e.shape = Array.from({ length: 9 }, () => rand(0.75, 1.15));
-    }
-    // Ocasionalmente, una línea de polvo: satisfactorio de barrer
-    if (e.type === 'dust' && Math.random() < 0.15) {
-      for (let i = 1; i < 6; i++) G.ents.push(Object.assign({}, e, { y: e.y - i * 22 }));
-    }
+    const r = big ? rand(26, 34) : rand(12, 18);
+    const fromSide = G.sector >= 1 && Math.random() < 0.25;
+    const e = {
+      type: 'meteor', r, hp: big ? 3 : 1, big,
+      x: fromSide ? (Math.random() < 0.5 ? -r : W + r) : rand(r, W - r), y: fromSide ? rand(-40, H * 0.3) : -r - 10,
+      vy: rand(120, 180) * (0.7 + d * 0.3), vx: 0, near: false, rot: Math.random() * 6, vr: rand(-2, 2),
+      shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
+    };
+    e.vx = fromSide ? (e.x < 0 ? 1 : -1) * rand(80, 150) : rand(-40, 40) * d * 0.5;
     G.ents.push(e);
+  }
+  function spawnDust(x, y, n = 1, spread = 0) {
+    for (let i = 0; i < n; i++) G.ents.push({ type: 'dust', r: 7, x: x + rand(-spread, spread), y: y - i * (spread ? 0 : 24), vx: rand(-15, 15), vy: rand(110, 150) });
+  }
+  function spawn() {
+    const d = difficulty(), r = Math.random();
+    if (r < 0.06) G.ents.push({ type: 'junk', r: 20, hp: 3, x: rand(30, W - 30), y: -30, vx: rand(-20, 20), vy: 90, rot: 0, vr: rand(-1, 1) });
+    else if (r < 0.06 + Math.min(0.62, 0.3 + d * 0.08)) spawnMeteor(Math.random() < 0.12 + G.sector * 0.06);
+    else spawnDust(rand(20, W - 20), -10, Math.random() < 0.2 ? 5 : 1);
   }
 
   function burst(x, y, color, n = 10, speed = 160) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2, s = rand(speed * 0.3, speed);
-      G.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.3, 0.7), max: 0.7, color });
+      G.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.3, 0.8), max: 0.8, color });
     }
   }
-  function floatText(x, y, txt, color = '#f2d49b', size = 16) {
-    G.texts.push({ x, y, txt, color, size, life: 0.9 });
+  function floatText(x, y, txt, color = '#ffcf6b', size = 16) { G.texts.push({ x, y, txt, color, size, life: 0.9 }); }
+  function addCombo() {
+    G.combo++; G.comboTimer = 2.5; G.maxCombo = Math.max(G.maxCombo, G.combo);
+    if (G.combo % 10 === 0) { floatText(G.p.x, G.p.y - 40, `x${mult()}!`, '#8cc8ff', 22); beep(880, 0.15, 'triangle'); }
   }
-  const mult = () => 1 + Math.floor(G.combo / 10);
+  const chargeHowl = n => { G.howl = Math.min(100, G.howl + n * (1 + save.up.howl * 0.25)); };
 
-  function hit() {
-    if (G.inv > 0) return;
+  function hitPlayer() {
+    if (G.inv > 0 || G.phase === 'won') return;
     if (G.power.shield > 0) {
-      G.power.shield = 0; G.inv = 0.8; burst(G.p.x, G.p.y, '#99ccff', 18);
-      floatText(G.p.x, G.p.y - 20, '¡Escudo!', '#99ccff'); beep(300, 0.15, 'triangle');
+      G.power.shield = 0; G.inv = 0.8; burst(G.p.x, G.p.y, '#8cc8ff', 20);
+      floatText(G.p.x, G.p.y - 30, '¡Burbuja!', '#8cc8ff'); beep(300, 0.15, 'triangle');
       return;
     }
-    G.lives--; G.combo = 0; G.inv = 1.4; G.shake = 14;
-    burst(G.p.x, G.p.y, '#ff6b6b', 26, 240);
-    beep(120, 0.3, 'sawtooth', 0.1, -60);
+    G.lives--; G.combo = 0; G.inv = 1.5; G.shake = 14;
+    burst(G.p.x, G.p.y, '#ff4d5e', 26, 240);
+    beep(160, 0.25, 'sawtooth', 0.1, -100);
     if (navigator.vibrate) try { navigator.vibrate(80); } catch (e) {}
-    if (G.lives <= 0) gameOver();
+    if (G.lives <= 0) endGame(false);
   }
 
+  function destroyMeteor(e) {
+    G.meteors++; addCombo(); chargeHowl(e.big ? 10 : 4);
+    const pts = (e.big ? 60 : 25) * mult(); G.score += pts;
+    burst(e.x, e.y, '#ff9a3c', e.big ? 24 : 12, e.big ? 220 : 150);
+    floatText(e.x, e.y, `+${pts}`, '#ff9a3c', 13);
+    beep(e.big ? 110 : 180, 0.12, 'square', 0.04, -80);
+    if (e.big) for (let i = 0; i < 2; i++) G.ents.push(Object.assign({}, e, {
+      r: e.r * 0.5, hp: 1, big: false, x: e.x + (i ? 10 : -10), vx: (i ? 1 : -1) * rand(60, 120), vy: e.vy * 0.8, near: false,
+      shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
+    }));
+    else if (Math.random() < 0.35) spawnDust(e.x, e.y, 2, 12);
+  }
+  function destroyJunk(e) {
+    G.score += 40 * mult(); addCombo(); chargeHowl(6);
+    burst(e.x, e.y, '#c9d3ff', 18, 180); beep(260, 0.12, 'square', 0.05, 200);
+    const kinds = Object.keys(ITEMS);
+    const kind = (G.lives < 2 && Math.random() < 0.5) ? 'bone' : kinds[Math.floor(Math.random() * kinds.length)];
+    G.ents.push({ type: 'item', kind, r: 16, x: e.x, y: e.y, vx: 0, vy: 80 });
+  }
+
+  function damageBoss(n) {
+    const b = G.boss; if (!b || b.hp <= 0) return;
+    b.hp -= n; b.flash = 0.08; G.score += 10 * n;
+    if (b.hp <= b.max * 0.5 && b.stage < 2) { b.stage = 2; setBanner('¡Apolo se enfurece!', 'Disparos triples'); beep(90, 0.5, 'sawtooth', 0.08, -40); }
+    if (b.hp <= b.max * 0.2 && b.stage < 3) { b.stage = 3; setBanner('¡Último esfuerzo!', 'Apolo lo da todo'); beep(80, 0.5, 'sawtooth', 0.08, -40); }
+    if (b.hp <= 0) {
+      b.hp = 0; G.phase = 'won'; G.shake = 20;
+      const bonus = 5000 + G.lives * 500;
+      G.score += bonus;
+      for (let i = 0; i < 6; i++) setTimeout(() => { if (G) { burst(b.x + rand(-80, 80), b.y + rand(-40, 40), i % 2 ? '#ff4d5e' : '#ffcf6b', 30, 300); beep(70 + i * 20, 0.3, 'sawtooth', 0.08, -30); } }, i * 180);
+      floatText(W / 2, H / 2, `¡APOLO DERROTADO! +${bonus}`, '#ffcf6b', 24);
+      G.ents.forEach(e => { if (e.type === 'meteor') burst(e.x, e.y, '#ff9a3c', 8); });
+      G.ents = G.ents.filter(e => e.type !== 'meteor'); G.enemyShots = [];
+      const g = G;
+      setTimeout(() => { if (G === g && (state === 'play' || state === 'pause')) endGame(true); }, 2600);
+    }
+  }
+
+  function howl() {
+    if (state !== 'play' || G.howl < 100 || G.phase === 'won') return;
+    G.howl = 0; G.howls++; G.shake = 10;
+    G.waves.push({ x: G.p.x, y: G.p.y, r: 10, hitBoss: false });
+    floatText(G.p.x, G.p.y - 40, '¡AUUUUU!', '#c9a7ff', 26);
+    beep(300, 0.6, 'sawtooth', 0.07, 500); beep(450, 0.6, 'triangle', 0.05, 400);
+  }
+
+  function nextSector() {
+    G.score += 500; floatText(W / 2, H * 0.45, '+500 sector superado', '#8cc8ff', 18);
+    G.sector++; G.st = 0;
+    if (G.sector < SECTORS.length) { setBanner(`Sector ${G.sector + 1}`, SECTORS[G.sector].name); beep(520, 0.3, 'triangle', 0.06, 300); }
+    else {
+      G.phase = 'intro'; state = 'cutscene'; showOnly('bossIntro');
+      beep(70, 0.8, 'sawtooth', 0.09, -20);
+    }
+  }
+  function startBoss() {
+    if (state !== 'cutscene') return;
+    state = 'play'; G.phase = 'boss'; showOnly(null);
+    G.ents = G.ents.filter(e => e.type !== 'meteor');
+    const max = 150;
+    G.boss = { x: W / 2, y: -100, hp: max, max, t: 0, shotT: 1.5, stage: 1, flash: 0 };
+    setBanner('Apolo', 'El agujero negro');
+    last = performance.now();
+  }
+
+  // --- Actualización ---
   function update(dt) {
     G.t += dt;
-    const slow = G.power.slow > 0 ? 0.5 : 1;
     const p = G.p;
 
-    // Movimiento: puntero (sigue suavemente) o teclado
-    let kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
-    let ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
+    // Movimiento
+    const kx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0);
+    const ky = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
     if (kx || ky) {
       pointer.active = false;
       const len = Math.hypot(kx, ky);
-      p.vx += (kx / len * 420 - p.vx) * Math.min(1, dt * 12);
-      p.vy += (ky / len * 420 - p.vy) * Math.min(1, dt * 12);
+      p.vx += (kx / len * 440 - p.vx) * Math.min(1, dt * 12);
+      p.vy += (ky / len * 440 - p.vy) * Math.min(1, dt * 12);
     } else if (pointer.active) {
-      p.vx = (pointer.x - p.x) * 12; p.vy = (pointer.y - 40 - p.y) * 12;
-    } else {
-      p.vx *= 0.85; p.vy *= 0.85;
-    }
+      p.vx = (pointer.x - p.x) * 12; p.vy = (pointer.y - 60 - p.y) * 12;
+    } else { p.vx *= 0.85; p.vy *= 0.85; }
     p.x = Math.max(p.r, Math.min(W - p.r, p.x + p.vx * dt));
-    p.y = Math.max(p.r + 60, Math.min(H - p.r, p.y + p.vy * dt));
+    p.y = Math.max(p.r + 80, Math.min(H - p.r, p.y + p.vy * dt));
 
-    // Generación
-    G.spawn -= dt;
-    if (G.spawn <= 0) { spawn(); G.spawn = Math.max(0.12, 0.42 / difficulty()) * rand(0.6, 1.4); }
+    // Fases
+    if (G.phase === 'sector') {
+      G.st += dt;
+      if (G.st >= SECTORS[G.sector].len) { nextSector(); if (state !== 'play') return; }
+    }
+    if (G.phase === 'sector' || G.phase === 'boss') {
+      G.spawn -= dt;
+      if (G.spawn <= 0) {
+        spawn();
+        const base = G.phase === 'boss' ? 0.75 - (G.boss.stage - 1) * 0.12 : Math.max(0.16, 0.45 / difficulty());
+        G.spawn = base * rand(0.6, 1.4);
+      }
+    }
+
+    // Ladri-Cañón: dispara solo
+    if (G.phase !== 'won') {
+      G.fire -= dt;
+      if (G.fire <= 0) {
+        G.fire = 0.36 - save.up.bark * 0.04;
+        const spread = G.power.triple > 0 ? [-160, 0, 160] : [0];
+        spread.forEach(vx => G.shots.push({ x: p.x, y: p.y - p.r, vx, vy: -640, r: 9 }));
+        beep(240, 0.05, 'square', 0.018, -90);
+      }
+    }
 
     // Timers
     for (const k in G.power) G.power[k] = Math.max(0, G.power[k] - dt);
     G.inv = Math.max(0, G.inv - dt);
     G.shake = Math.max(0, G.shake - dt * 40);
     if (G.combo > 0) { G.comboTimer -= dt; if (G.comboTimer <= 0) G.combo = 0; }
+    if (G.banner) { G.banner.life -= dt; if (G.banner.life <= 0) G.banner = null; }
+    if (G.phase !== 'won') G.score += dt * 5 * difficulty();
 
-    const magnetR = 40 + save.up.magnet * 22 + (G.power.magnet > 0 ? 160 : 0);
+    // Disparos de Gaia
+    for (let i = G.shots.length - 1; i >= 0; i--) {
+      const s = G.shots[i]; s.x += s.vx * dt; s.y += s.vy * dt;
+      let used = false;
+      for (let j = G.ents.length - 1; j >= 0 && !used; j--) {
+        const e = G.ents[j];
+        if ((e.type === 'meteor' || e.type === 'junk') && Math.hypot(e.x - s.x, e.y - s.y) < e.r + s.r) {
+          used = true; e.hp--; e.flash = 0.06;
+          if (e.hp <= 0) { G.ents.splice(j, 1); e.type === 'meteor' ? destroyMeteor(e) : destroyJunk(e); }
+          else burst(s.x, s.y, '#ffcf6b', 4, 80);
+        }
+      }
+      const b = G.boss;
+      if (!used && b && b.hp > 0 && ((s.x - b.x) / 95) ** 2 + ((s.y - b.y) / 55) ** 2 < 1) {
+        used = true; damageBoss(1); burst(s.x, s.y, '#ff4d5e', 5, 100);
+      }
+      if (used || s.y < -20 || s.x < -20 || s.x > W + 20) G.shots.splice(i, 1);
+    }
 
+    // Súper Aullido (onda expansiva)
+    for (let i = G.waves.length - 1; i >= 0; i--) {
+      const w = G.waves[i]; w.r += 900 * dt;
+      for (let j = G.ents.length - 1; j >= 0; j--) {
+        const e = G.ents[j];
+        if ((e.type === 'meteor' || e.type === 'junk') && Math.hypot(e.x - w.x, e.y - w.y) < w.r) {
+          G.ents.splice(j, 1); e.type === 'meteor' ? destroyMeteor(Object.assign(e, { big: false })) : destroyJunk(e);
+        }
+      }
+      G.enemyShots = G.enemyShots.filter(s => Math.hypot(s.x - w.x, s.y - w.y) > w.r);
+      const b = G.boss;
+      if (b && !w.hitBoss && Math.hypot(b.x - w.x, b.y - w.y) < w.r) { w.hitBoss = true; damageBoss(14); floatText(b.x, b.y + 60, '-14', '#c9a7ff', 22); }
+      if (w.r > Math.hypot(W, H)) G.waves.splice(i, 1);
+    }
+
+    // Entidades
+    const magnetR = 50 + save.up.magnet * 25 + (G.power.magnet > 0 ? 170 : 0);
     for (let i = G.ents.length - 1; i >= 0; i--) {
       const e = G.ents[i];
-      if ((e.type === 'dust' || e.type === 'seed') && Math.hypot(e.x - p.x, e.y - p.y) < magnetR) {
+      if ((e.type === 'dust' || e.type === 'item') && Math.hypot(e.x - p.x, e.y - p.y) < magnetR) {
         const a = Math.atan2(p.y - e.y, p.x - e.x);
-        e.x += Math.cos(a) * 420 * dt; e.y += Math.sin(a) * 420 * dt;
-      } else {
-        e.x += e.vx * dt * slow; e.y += e.vy * dt * slow;
-      }
-      e.rot += e.vr * dt;
+        e.x += Math.cos(a) * 440 * dt; e.y += Math.sin(a) * 440 * dt;
+      } else { e.x += e.vx * dt; e.y += e.vy * dt; }
+      if (e.vr) e.rot += e.vr * dt;
+      if (e.flash) e.flash -= dt;
       const dist = Math.hypot(e.x - p.x, e.y - p.y);
 
-      if (dist < e.r + p.r - (e.type === 'rock' ? 4 : -4)) {
+      if (dist < e.r + p.r - (e.type === 'meteor' || e.type === 'junk' ? 6 : -6)) {
+        if (e.type === 'meteor' || e.type === 'junk') {
+          if (G.inv > 0) continue;
+          G.ents.splice(i, 1); burst(e.x, e.y, '#ff9a3c', 12); hitPlayer();
+          if (state !== 'play') return;
+          continue;
+        }
         G.ents.splice(i, 1);
-        if (e.type === 'rock') { hit(); if (state !== 'play') return; continue; }
         if (e.type === 'dust') {
-          G.combo++; G.comboTimer = 2.2; G.maxCombo = Math.max(G.maxCombo, G.combo);
-          G.dust++; G.score += 10 * mult();
-          burst(e.x, e.y, '#f2d49b', 5, 90);
+          addCombo(); chargeHowl(2); G.dust++; G.score += 10 * mult();
+          burst(e.x, e.y, '#ffcf6b', 5, 90);
           beep(600 + Math.min(G.combo, 60) * 15, 0.05, 'sine', 0.05);
-          if (G.combo % 10 === 0) { floatText(p.x, p.y - 30, `x${mult()}!`, '#66ffcc', 22); beep(880, 0.15, 'triangle'); }
-        } else if (e.type === 'seed') {
-          G.seeds++;
-          if (G.lives < G.maxLives) { G.lives++; floatText(e.x, e.y, '+1 vida', '#66ffcc'); }
-          else { G.score += 100 * mult(); floatText(e.x, e.y, `+${100 * mult()}`, '#66ffcc'); }
-          burst(e.x, e.y, '#66ffcc', 16); beep(520, 0.2, 'triangle', 0.08, 300);
-        } else if (e.type === 'rune') {
-          G.runes++;
-          const dur = 6 + save.up.power * 1.5;
-          G.power[e.kind] = e.kind === 'shield' ? 999 : dur;
-          floatText(e.x, e.y, { magnet: 'Imán', shield: 'Escudo', slow: 'Tiempo lento' }[e.kind], '#99ccff', 18);
-          burst(e.x, e.y, '#99ccff', 20); beep(440, 0.25, 'square', 0.05, 440);
+        } else if (e.type === 'item') {
+          const dur = 7 + save.up.power * 1.5;
+          if (e.kind === 'bone') {
+            if (G.lives < G.maxLives) { G.lives++; floatText(e.x, e.y, '+1 hueso', '#8cc8ff'); }
+            else { G.score += 200 * mult(); floatText(e.x, e.y, `+${200 * mult()}`, '#8cc8ff'); }
+          } else {
+            G.power[e.kind] = e.kind === 'shield' ? 999 : dur;
+            floatText(e.x, e.y, { shield: 'Burbuja de Hueso', triple: 'Ladrido triple', magnet: 'Collar imán' }[e.kind], '#c9a7ff', 17);
+          }
+          burst(e.x, e.y, '#c9a7ff', 18); beep(440, 0.25, 'triangle', 0.06, 440);
         }
         continue;
       }
-      // Roce: premio por arriesgar
-      if (e.type === 'rock' && !e.near && dist < e.r + p.r + 16 && e.y > p.y) {
-        e.near = true; G.near++;
+      if (e.type === 'meteor' && !e.near && dist < e.r + p.r + 18 && e.y > p.y) {
+        e.near = true; G.near++; chargeHowl(5);
         const b = 25 * mult(); G.score += b;
-        floatText(p.x + 20, p.y, `¡Roce! +${b}`, '#ff9f6b', 14); beep(980, 0.06, 'square', 0.03);
+        floatText(p.x + 30, p.y, `¡Roce! +${b}`, '#ff9a3c', 14); beep(980, 0.06, 'square', 0.03);
       }
-      if (e.y > H + 40 || e.x < -60 || e.x > W + 60) G.ents.splice(i, 1);
+      if (e.y > H + 50 || e.x < -80 || e.x > W + 80) G.ents.splice(i, 1);
     }
 
-    G.score += dt * 5 * difficulty(); // puntos por sobrevivir
+    // Apolo
+    const b = G.boss;
+    if (b && b.hp > 0) {
+      b.t += dt; b.flash = Math.max(0, b.flash - dt);
+      const speed = 0.7 + b.stage * 0.2;
+      const tx = W / 2 + Math.sin(b.t * speed) * Math.max(0, W / 2 - 100);
+      const ty = 130 + Math.sin(b.t * 1.7) * 25 + (b.stage === 3 ? Math.max(0, Math.sin(b.t * 0.9)) * H * 0.25 : 0);
+      b.x += (tx - b.x) * Math.min(1, dt * 3); b.y += (ty - b.y) * Math.min(1, dt * 2);
+      b.shotT -= dt;
+      if (b.shotT <= 0) {
+        const a = Math.atan2(p.y - b.y, p.x - b.x);
+        const n = b.stage === 1 ? 1 : b.stage === 2 ? 3 : 5;
+        for (let k = 0; k < n; k++) {
+          const aa = a + (k - (n - 1) / 2) * 0.22, v = 250 + b.stage * 30;
+          G.enemyShots.push({ x: b.x, y: b.y + 50, vx: Math.cos(aa) * v, vy: Math.sin(aa) * v, r: 7 });
+        }
+        b.shotT = b.stage === 1 ? 1.1 : b.stage === 2 ? 1.0 : 0.75;
+        beep(140, 0.12, 'sawtooth', 0.04, 200);
+      }
+      if (((p.x - b.x) / 95) ** 2 + ((p.y - b.y) / 55) ** 2 < 1) hitPlayer();
+      if (state !== 'play') return;
+    }
+    for (let i = G.enemyShots.length - 1; i >= 0; i--) {
+      const s = G.enemyShots[i]; s.x += s.vx * dt; s.y += s.vy * dt;
+      if (Math.hypot(s.x - p.x, s.y - p.y) < s.r + p.r - 6) { G.enemyShots.splice(i, 1); hitPlayer(); if (state !== 'play') return; continue; }
+      if (s.y > H + 20 || s.y < -40 || s.x < -20 || s.x > W + 20) G.enemyShots.splice(i, 1);
+    }
 
+    stepFx(dt);
+  }
+  function stepFx(dt) {
     for (let i = G.parts.length - 1; i >= 0; i--) {
       const q = G.parts[i]; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.96; q.vy *= 0.96; q.life -= dt;
       if (q.life <= 0) G.parts.splice(i, 1);
@@ -423,99 +685,190 @@
 
   // ---------- Dibujo ----------
   function drawBg(dt, speed) {
+    const boss = G && (G.phase === 'boss' || G.phase === 'won' || G.phase === 'intro');
     const g = ctx.createRadialGradient(W * 0.3, H * 0.2, 0, W * 0.5, H * 0.5, Math.max(W, H));
-    g.addColorStop(0, '#1c2440'); g.addColorStop(0.5, '#10121c'); g.addColorStop(1, '#05060a');
+    const tint = G && !boss ? ['#16204a', '#2a1650', '#3a1a2a'][Math.min(2, G.sector)] : '#16204a';
+    g.addColorStop(0, tint); g.addColorStop(0.55, '#0b0f26'); g.addColorStop(1, '#03040a');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (boss) { // agujero negro de Apolo
+      const cx = W / 2, cy = H * 0.12, R = Math.min(W, H) * 0.32;
+      const rg = ctx.createRadialGradient(cx, cy, R * 0.45, cx, cy, R * 1.3);
+      rg.addColorStop(0, '#000'); rg.addColorStop(0.35, '#ff9a3c66'); rg.addColorStop(0.5, '#ffcf6b33'); rg.addColorStop(1, '#0000');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, R * 0.5, 0, Math.PI * 2); ctx.fill();
+    }
     for (const s of stars) {
       s.y += s.z * speed * dt / H;
       if (s.y > 1) { s.y -= 1; s.x = Math.random(); }
       ctx.fillStyle = `rgba(220,230,255,${0.25 + s.z * 0.6})`;
-      ctx.fillRect(s.x * W, s.y * H, s.z * 2, s.z * 2 + (speed > 100 ? s.z * 3 : 0));
+      ctx.fillRect(s.x * W, s.y * H, s.z * 2, s.z * 2 + (speed > 120 ? s.z * 4 : 0));
     }
   }
 
-  function drawPlayer(p, t) {
+  function drawGaia(p, t) {
     if (G.inv > 0 && Math.floor(t * 20) % 2 === 0) return;
-    // estela
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = '#66ffcc';
-    ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r + 10, p.r * 0.5, 14 + Math.sin(t * 30) * 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save(); ctx.translate(p.x, p.y);
+    const tilt = Math.max(-0.35, Math.min(0.35, p.vx / 1400));
+    ctx.rotate(tilt);
+    // propulsor
+    ctx.globalAlpha = 0.6;
+    const fl = ctx.createLinearGradient(0, 30, 0, 62);
+    fl.addColorStop(0, '#8cc8ff'); fl.addColorStop(1, '#8cc8ff00');
+    ctx.fillStyle = fl; ctx.beginPath(); ctx.ellipse(0, 44, 8, 16 + Math.sin(t * 40) * 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
-    // planeta-semilla
-    const g = ctx.createRadialGradient(p.x - 4, p.y - 5, 2, p.x, p.y, p.r);
-    g.addColorStop(0, '#b6ffe6'); g.addColorStop(0.5, '#2fbf8f'); g.addColorStop(1, '#13506a');
-    ctx.fillStyle = g; ctx.shadowColor = '#66ffcc'; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    // continentes
-    ctx.fillStyle = '#1d7a4f';
-    ctx.beginPath(); ctx.arc(p.x + 4, p.y - 3, 4, 0, Math.PI * 2); ctx.arc(p.x - 5, p.y + 5, 3, 0, Math.PI * 2); ctx.fill();
+    // cola que se mueve
+    ctx.strokeStyle = '#f2f2f2'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(10, 30); ctx.quadraticCurveTo(28 + Math.sin(t * 12) * 6, 30, 26 + Math.sin(t * 12) * 8, 14); ctx.stroke();
+    // traje azul
+    ctx.fillStyle = '#3f7fc4';
+    ctx.beginPath(); ctx.ellipse(0, 26, 15, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1d3f73'; ctx.fillRect(-1.5, 15, 3, 22);
+    // patitas
+    ctx.fillStyle = '#ffffff';
+    [[-11, 38], [11, 38], [-17, 26], [17, 26]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill(); });
+    // casco con la cara de Gaia
+    const R = p.r;
+    if (ready(IMG['gaia-head'])) {
+      ctx.save(); ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(IMG['gaia-head'], -R, -R, R * 2, R * 2); ctx.restore();
+    } else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); }
+    ctx.strokeStyle = '#cfe6ff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+    // burbuja de hueso
     if (G.power.shield > 0) {
-      ctx.strokeStyle = '#99ccff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + Math.sin(t * 8) * 0.3;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 9, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#8cc8ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.55 + Math.sin(t * 8) * 0.3;
+      ctx.fillStyle = '#8cc8ff18';
+      ctx.beginPath(); ctx.arc(p.x, p.y + 10, 42, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
     }
     if (G.power.magnet > 0) {
-      ctx.strokeStyle = '#f2d49b44'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 40 + save.up.magnet * 22 + 160, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#ffcf6b33'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 50 + save.up.magnet * 25 + 170, 0, Math.PI * 2); ctx.stroke();
     }
   }
 
-  const RUNE = { magnet: 'ᛗ', shield: 'ᛉ', slow: 'ᛁ' };
+  function drawMeteor(e) {
+    const sp = Math.hypot(e.vx, e.vy) || 1, ux = e.vx / sp, uy = e.vy / sp;
+    // estela de fuego
+    const tl = e.r * 3.2;
+    const g = ctx.createLinearGradient(e.x, e.y, e.x - ux * tl, e.y - uy * tl);
+    g.addColorStop(0, '#ffcf6bcc'); g.addColorStop(0.4, '#ff9a3c88'); g.addColorStop(1, '#ff4d5e00');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(e.x - uy * e.r, e.y + ux * e.r);
+    ctx.lineTo(e.x - ux * tl, e.y - uy * tl);
+    ctx.lineTo(e.x + uy * e.r, e.y - ux * e.r);
+    ctx.closePath(); ctx.fill();
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
+    ctx.shadowColor = '#ff9a3c'; ctx.shadowBlur = 18;
+    ctx.fillStyle = e.flash > 0 ? '#fff' : '#7a4a2a';
+    ctx.beginPath();
+    e.shape.forEach((s, i) => { const a = i / e.shape.length * Math.PI * 2; ctx.lineTo(Math.cos(a) * e.r * s, Math.sin(a) * e.r * s); });
+    ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#4e2e1a';
+    ctx.beginPath(); ctx.arc(e.r * 0.3, -e.r * 0.2, e.r * 0.22, 0, Math.PI * 2); ctx.arc(-e.r * 0.3, e.r * 0.25, e.r * 0.15, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
   function drawEnt(e, t) {
+    if (e.type === 'meteor') return drawMeteor(e);
     ctx.save(); ctx.translate(e.x, e.y);
     if (e.type === 'dust') {
       ctx.rotate(t * 3 + e.x);
-      ctx.fillStyle = '#f2d49b'; ctx.shadowColor = '#f2d49b'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ffcf6b'; ctx.shadowColor = '#ffcf6b'; ctx.shadowBlur = 10;
       ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        const rr = i % 2 ? e.r * 0.4 : e.r, a = i * Math.PI / 4;
-        ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-      }
+      for (let i = 0; i < 8; i++) { const rr = i % 2 ? e.r * 0.4 : e.r, a = i * Math.PI / 4; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
       ctx.fill();
-    } else if (e.type === 'rock') {
+    } else if (e.type === 'junk') { // satélite roto
       ctx.rotate(e.rot);
-      ctx.fillStyle = '#5a5560'; ctx.strokeStyle = '#8a8290'; ctx.lineWidth = 2;
-      ctx.beginPath();
-      e.shape.forEach((s, i) => { const a = i / e.shape.length * Math.PI * 2; ctx.lineTo(Math.cos(a) * e.r * s, Math.sin(a) * e.r * s); });
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#433f48';
-      ctx.beginPath(); ctx.arc(e.r * 0.3, -e.r * 0.2, e.r * 0.22, 0, Math.PI * 2); ctx.fill();
-    } else if (e.type === 'seed') {
-      ctx.shadowColor = '#66ffcc'; ctx.shadowBlur = 16;
-      ctx.fillStyle = '#66ffcc';
-      ctx.beginPath(); ctx.ellipse(0, 0, e.r * 0.6, e.r, Math.sin(t * 3) * 0.4, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0b0c12'; ctx.font = 'bold 12px Raleway'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('+', 0, 1);
-    } else if (e.type === 'rune') {
-      ctx.shadowColor = '#99ccff'; ctx.shadowBlur = 18;
-      ctx.fillStyle = '#1e1f26'; ctx.strokeStyle = '#99ccff'; ctx.lineWidth = 2;
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#3a5b9a';
+      ctx.fillRect(-34, -8, 22, 16); ctx.fillRect(12, -8, 22, 16);
+      ctx.strokeStyle = '#8cc8ff55'; ctx.lineWidth = 1;
+      for (let x = -30; x < 34; x += 6) { if (x > -12 && x < 12) continue; ctx.beginPath(); ctx.moveTo(x, -8); ctx.lineTo(x, 8); ctx.stroke(); }
+      ctx.fillStyle = e.flash > 0 ? '#fff' : '#b8bfd6';
+      ctx.fillRect(-12, -12, 24, 24);
+      ctx.fillStyle = '#ff9a3c'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (e.type === 'item') {
+      ctx.shadowColor = '#c9a7ff'; ctx.shadowBlur = 18;
+      ctx.fillStyle = '#1a1f45'; ctx.strokeStyle = '#c9a7ff'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(0, 0, e.r + Math.sin(t * 6) * 1.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       ctx.shadowBlur = 0;
-      ctx.fillStyle = '#99ccff'; ctx.font = 'bold 16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(RUNE[e.kind], 0, 1);
+      ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(ITEMS[e.kind], 0, 1);
     }
     ctx.restore();
   }
 
+  function drawApolo(b, t) {
+    ctx.save(); ctx.translate(b.x, b.y);
+    const flash = b.flash > 0;
+    // motores
+    [-68, 68].forEach(x => {
+      const g = ctx.createRadialGradient(x, 22, 2, x, 22, 22);
+      g.addColorStop(0, '#ffd0d0'); g.addColorStop(0.4, '#ff2a3d'); g.addColorStop(1, '#ff2a3d00');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, 22, 20 + Math.sin(t * 20) * 2, 0, Math.PI * 2); ctx.fill();
+    });
+    // casco de la nave (angular, negro y rojo)
+    ctx.fillStyle = flash ? '#fff' : '#15151b'; ctx.strokeStyle = '#d0213a'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-100, -14); ctx.lineTo(-40, -40); ctx.lineTo(40, -40); ctx.lineTo(100, -14);
+    ctx.lineTo(74, 22); ctx.lineTo(30, 44); ctx.lineTo(0, 66); ctx.lineTo(-30, 44); ctx.lineTo(-74, 22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#8c1526'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-88, -8); ctx.lineTo(-38, 30); ctx.moveTo(88, -8); ctx.lineTo(38, 30); ctx.stroke();
+    // cabina con Apolo
+    const R = 30;
+    if (ready(IMG['apolo-head'])) {
+      ctx.save(); ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(IMG['apolo-head'], -R, 2 - R, R * 2, R * 2); ctx.restore();
+    }
+    ctx.strokeStyle = '#cfe6ffaa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
   function draw(dt) {
-    const speed = state === 'play' ? 160 * difficulty() * (G.power.slow > 0 ? 0.5 : 1) : 40;
+    const playing = state === 'play';
+    const speed = playing && G ? 150 * difficulty() : 40;
     ctx.save();
     if (G && G.shake > 0) ctx.translate(rand(-G.shake, G.shake), rand(-G.shake, G.shake));
     drawBg(dt, speed);
     if (G && state !== 'menu') {
       const t = G.t;
       for (const e of G.ents) drawEnt(e, t);
+      // ondas del Súper Aullido
+      for (const w of G.waves) {
+        ctx.strokeStyle = '#c9a7ff'; ctx.lineWidth = 10; ctx.globalAlpha = Math.max(0, 1 - w.r / Math.hypot(W, H));
+        ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // ladridos sónicos
+      ctx.strokeStyle = '#8cc8ff'; ctx.lineWidth = 3;
+      for (const s of G.shots) {
+        ctx.beginPath(); ctx.arc(s.x, s.y + 6, s.r, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+        ctx.beginPath(); ctx.arc(s.x, s.y + 12, s.r * 0.7, Math.PI * 1.2, Math.PI * 1.8); ctx.stroke();
+      }
+      if (G.boss && G.phase !== 'won') drawApolo(G.boss, t);
+      // láseres de Apolo
+      ctx.fillStyle = '#ff4d5e'; ctx.shadowColor = '#ff4d5e'; ctx.shadowBlur = 12;
+      for (const s of G.enemyShots) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); }
       ctx.shadowBlur = 0;
       for (const q of G.parts) {
         ctx.globalAlpha = Math.max(0, q.life / q.max); ctx.fillStyle = q.color;
         ctx.fillRect(q.x - 2, q.y - 2, 4, 4);
       }
       ctx.globalAlpha = 1;
-      if (state === 'play' || state === 'pause') drawPlayer(G.p, t);
+      if (state === 'play' || state === 'pause' || state === 'cutscene') drawGaia(G.p, t);
       ctx.textAlign = 'center';
       for (const tx of G.texts) {
         ctx.globalAlpha = Math.min(1, tx.life * 2); ctx.fillStyle = tx.color;
         ctx.font = `900 ${tx.size}px Raleway`; ctx.fillText(tx.txt, tx.x, tx.y);
+      }
+      if (G.banner && playing) {
+        ctx.globalAlpha = Math.min(1, G.banner.life * 1.5);
+        ctx.fillStyle = '#f4f6ff'; ctx.font = '900 34px Raleway'; ctx.fillText(G.banner.title, W / 2, H * 0.36);
+        ctx.fillStyle = '#c9a7ff'; ctx.font = '700 18px Raleway'; ctx.fillText(G.banner.sub, W / 2, H * 0.36 + 30);
       }
       ctx.globalAlpha = 1;
     }
@@ -523,30 +876,45 @@
   }
 
   // ---------- HUD ----------
-  const $ = id => document.getElementById(id);
   function hud() {
     $('score').textContent = Math.floor(G.score);
     $('combo').textContent = G.combo >= 3 ? `Combo ${G.combo} · x${mult()}` : '';
-    $('lives').textContent = '🌱'.repeat(Math.max(0, G.lives));
+    $('lives').textContent = G.lives > 6 ? `🦴 x${G.lives}` : '🦴'.repeat(Math.max(0, G.lives));
     $('hudBest').textContent = save.best;
-    $('hudDust').textContent = G.dust;
+    $('sector').textContent = G.phase === 'sector'
+      ? `Sector ${G.sector + 1}/3 · ${Math.ceil(SECTORS[G.sector].len - G.st)}s` : 'Jefe final';
     const pw = [];
-    if (G.power.magnet > 0) pw.push(`ᛗ Imán ${G.power.magnet.toFixed(1)}`);
-    if (G.power.slow > 0) pw.push(`ᛁ Lento ${G.power.slow.toFixed(1)}`);
-    if (G.power.shield > 0) pw.push('ᛉ Escudo');
+    if (G.power.shield > 0) pw.push('🫧 Burbuja');
+    if (G.power.triple > 0) pw.push(`🔱 ${G.power.triple.toFixed(1)}`);
+    if (G.power.magnet > 0) pw.push(`🧲 ${G.power.magnet.toFixed(1)}`);
     $('power').textContent = pw.join(' · ');
+    const sb = $('superBtn');
+    sb.style.setProperty('--pct', G.howl + '%');
+    sb.classList.toggle('ready', G.howl >= 100);
+    const b = G.boss;
+    $('bossBar').style.display = b && b.hp > 0 ? 'block' : 'none';
+    if (b) $('bossFill').style.width = (b.hp / b.max * 100) + '%';
   }
 
   function missionHTML(list, progress) {
-    return '<div style="font-size:.8em;color:var(--muted);margin-bottom:4px">Misiones</div>' +
-      list.map(m => `<div class="mission ${m.done ? 'done' : ''}">
+    return '<div class="label">Misiones</div>' +
+      list.map(m => `<div class="row ${m.done ? 'done' : ''}">
         <span>${m.done ? '✔ ' : ''}${missionText(m)}${progress && !m.done ? ` <small style="color:var(--muted)">(${Math.floor(progress[m.k] || 0)})</small>` : ''}</span>
         <span class="rw">+${m.reward} ✦</span></div>`).join('');
   }
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function boardHTML(highlight) {
+    if (!save.board.length) return '<div class="hint">Todavía no hay récords. ¡Sé la primera persona!</div>';
+    return save.board.map((r, i) => `<div class="row ${i === highlight ? 'me' : ''}">
+      <span>${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'} ${esc(r.n)} ${r.w ? '🏆' : ''}</span><span class="rw">${r.s}</span></div>`).join('');
+  }
 
   function showOnly(id) {
-    ['menu', 'over', 'shop', 'pause'].forEach(o => $(o).classList.toggle('show', o === id));
-    $('hud').style.display = (state === 'play' || state === 'pause') ? 'flex' : 'none';
+    ['menu', 'over', 'shop', 'pause', 'fame', 'bossIntro'].forEach(o => $(o).classList.toggle('show', o === id));
+    const inGame = state === 'play' || state === 'pause';
+    $('hud').style.display = inGame ? 'flex' : 'none';
+    $('superBtn').style.display = inGame ? 'block' : 'none';
+    if (!inGame) $('bossBar').style.display = 'none';
   }
 
   let dailyBonus = 0;
@@ -555,8 +923,9 @@
     $('mBest').textContent = save.best;
     $('mDust').textContent = save.dust;
     $('mStreak').textContent = save.streak;
-    $('mMissions').innerHTML = (dailyBonus ? `<div class="mission done"><span>🔥 Bono diario (racha ${save.streak})</span><span class="rw">+${dailyBonus} ✦</span></div>` : '') + missionHTML(save.missions);
+    $('mMissions').innerHTML = (dailyBonus ? `<div class="row done"><span>🔥 Bono diario (racha ${save.streak})</span><span class="rw">+${dailyBonus} ✦</span></div>` : '') + missionHTML(save.missions);
   }
+  function showFame() { state = 'fame'; showOnly('fame'); $('fBoard').innerHTML = boardHTML(-1); }
 
   let shopReturn = 'menu';
   function showShop(from) {
@@ -578,19 +947,25 @@
   }
 
   function start() {
-    newGame(); state = 'play'; showOnly(null); beep(330, 0.2, 'triangle', 0.06, 330);
+    newGame(); state = 'play'; showOnly(null); last = performance.now();
+    beep(330, 0.2, 'triangle', 0.06, 330);
   }
 
-  function gameOver() {
+  // ---------- Final y Salón de la Fama ----------
+  let lastRun = null;
+  function endGame(won) {
+    if (state === 'over') return;
     state = 'over';
     const score = Math.floor(G.score);
-    const isBest = score > save.best;
-    if (isBest) save.best = score;
-    const earned = Math.round((G.dust + Math.floor(score / 100)) * (1 + save.up.value * 0.25));
+    const reached = won ? 'Apolo 🏆' : G.phase === 'boss' ? 'Apolo' : `Sector ${G.sector + 1}`;
+    lastRun = { score, won, reached, saved: false };
+    if (score > save.best) save.best = score;
+    if (won) save.wins++;
+    const earned = G.dust + Math.floor(score / 150);
     save.dust += earned; save.games++;
 
-    // Comprobar misiones
-    const prog = { dust: G.dust, combo: G.maxCombo, time: G.t, near: G.near, score, runes: G.runes, seeds: G.seeds };
+    const prog = { dust: G.dust, combo: G.maxCombo, meteors: G.meteors, near: G.near, score, howls: G.howls,
+      sector: G.phase === 'sector' ? G.sector + 1 : 4 };
     let bonus = 0;
     const shown = save.missions.map(m => {
       if (prog[m.k] >= m.n) { bonus += m.reward; save.missionLevel++; return Object.assign({}, m, { done: true }); }
@@ -602,17 +977,96 @@
     save.missions = keep;
     persist();
 
+    $('oTitle').innerHTML = won ? '<span class="win">¡Gaia derrotó a Apolo! 🏆</span>' : 'Gaia fue alcanzada';
+    $('oSub').textContent = won ? '¡Pasaste el juego! El espacio está a salvo.' : `${Math.floor(G.t)}s de viaje · ${G.meteors} meteoritos rotos · ${G.near} roces`;
     $('oScore').textContent = score;
-    $('oCombo').textContent = G.maxCombo;
+    $('oSector').textContent = reached;
     $('oDust').textContent = '+' + (earned + bonus);
-    $('oNear').textContent = `${Math.floor(G.t)}s sobrevividos · ${G.near} roces · ${G.dust} polvo`;
-    const toBest = save.best - score;
-    $('newBest').innerHTML = isBest ? '<p class="newbest">★ ¡NUEVO RÉCORD! ★</p>'
-      : `<p class="hint" style="margin:0">A solo <b style="color:var(--gold)">${toBest}</b> puntos de tu récord…</p>`;
+    const qualifies = score > 0 && (save.board.length < 10 || score > save.board[save.board.length - 1].s);
+    $('saveBox').style.display = qualifies ? 'block' : 'none';
+    $('saveBtn').disabled = false;
+    $('nameInput').value = save.lastName || '';
+    $('saveMsg').textContent = won ? '¡Pasaste el juego! Anota tu nombre en el Salón de la Fama:' : '¡Entraste al top 10! Anota tu nombre:';
+    $('oBoard').innerHTML = '<div class="label">🏆 Salón de la Fama</div>' + boardHTML(-1) +
+      (!qualifies && save.board.length ? `<div class="hint">Necesitas más de ${save.board[save.board.length - 1].s} puntos para entrar al top 10.</div>` : '');
     $('oMissions').innerHTML = missionHTML(shown, prog);
     const affordable = UPGRADES.some(u => save.up[u.id] < u.max && save.dust >= cost(u));
     $('overShopBtn').textContent = affordable ? 'Mejoras ●' : 'Mejoras';
-    setTimeout(() => { if (state === 'over') showOnly('over'); }, 700);
+    setTimeout(() => { if (state === 'over') showOnly('over'); }, won ? 200 : 800);
+  }
+
+  function saveScore() {
+    if (!lastRun || lastRun.saved) return;
+    const name = ($('nameInput').value || '').trim().slice(0, 14) || 'Anónimo';
+    save.lastName = name;
+    const entry = { n: name, s: lastRun.score, w: lastRun.won, d: new Date().toISOString().slice(0, 10) };
+    save.board.push(entry);
+    save.board.sort((a, b) => b.s - a.s);
+    save.board = save.board.slice(0, 10);
+    persist();
+    lastRun.saved = true; lastRun.name = name;
+    const rank = save.board.indexOf(entry);
+    $('saveBtn').disabled = true;
+    $('saveMsg').textContent = rank >= 0 ? `¡Guardado! Puesto #${rank + 1} 🎉` : '¡Guardado!';
+    $('oBoard').innerHTML = '<div class="label">🏆 Salón de la Fama</div>' + boardHTML(rank);
+    beep(660, 0.3, 'triangle', 0.08, 600);
+  }
+
+  // Imagen para postear en la página de Outs of Space
+  function makeCard(withImages) {
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1080;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, 1080);
+    g.addColorStop(0, '#0b1030'); g.addColorStop(1, '#1d1240');
+    x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
+    for (let i = 0; i < 220; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.8})`; x.fillRect(Math.random() * 1080, Math.random() * 1080, 2, 2); }
+    x.textAlign = 'center';
+    if (withImages && ready(IMG.logo)) x.drawImage(IMG.logo, 290, 10, 500, 500);
+    else { x.fillStyle = '#f4f6ff'; x.font = '900 90px Raleway, sans-serif'; x.fillText('OUTS OF SPACE', 540, 250); }
+    if (withImages && ready(IMG['gaia-head'])) {
+      x.save(); x.beginPath(); x.arc(540, 590, 110, 0, Math.PI * 2); x.clip();
+      x.drawImage(IMG['gaia-head'], 430, 480, 220, 220); x.restore();
+      x.strokeStyle = '#8cc8ff'; x.lineWidth = 8; x.beginPath(); x.arc(540, 590, 110, 0, Math.PI * 2); x.stroke();
+    } else { x.font = '160px serif'; x.fillText('🐶🚀', 540, 650); }
+    x.fillStyle = '#c9a7ff'; x.font = '700 44px Raleway, sans-serif';
+    x.fillText(lastRun.name || save.lastName || 'Piloto de Gaia', 540, 770);
+    x.fillStyle = '#ffcf6b'; x.font = '900 130px Raleway, sans-serif';
+    x.fillText(String(lastRun.score), 540, 900);
+    x.fillStyle = '#f4f6ff'; x.font = '700 40px Raleway, sans-serif';
+    x.fillText(lastRun.won ? '🏆 ¡Derroté a Apolo!' : `Llegué a: ${lastRun.reached}`, 540, 970);
+    x.fillStyle = '#9aa3c7'; x.font = '400 28px Raleway, sans-serif';
+    x.fillText('Gaia vs Apolo · ¿Me superas?', 540, 1030);
+    return c;
+  }
+  function cardBlob() {
+    return new Promise(res => {
+      const tryMake = imgs => { try { makeCard(imgs).toBlob(b => res(b)); return true; } catch (e) { return false; } };
+      if (!tryMake(true)) tryMake(false) || res(null);
+    });
+  }
+  async function downloadCard() {
+    if (!lastRun) return;
+    const b = await cardBlob(); if (!b) return toast('No se pudo crear la imagen');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = `outs-of-space-${lastRun.score}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast('Imagen descargada 📸');
+  }
+  async function share() {
+    if (!lastRun) return;
+    const text = lastRun.won
+      ? `🐶🚀 ¡Derroté a Apolo en Outs of Space con ${lastRun.score} puntos! ¿Me superas?`
+      : `🐶🚀 Saqué ${lastRun.score} puntos en Outs of Space (llegué a ${lastRun.reached}). ¿Me superas?`;
+    const url = location.href.split('#')[0];
+    try {
+      const b = await cardBlob();
+      const file = b && new File([b], 'outs-of-space.png', { type: 'image/png' });
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) return await navigator.share({ text, files: [file] });
+      if (navigator.share) return await navigator.share({ text, url });
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(`${text} ${url}`); toast('Texto copiado ✔'); }
+    catch (e) { toast(text); }
   }
 
   function togglePause() {
@@ -622,38 +1076,44 @@
 
   // ---------- Entrada ----------
   window.addEventListener('keydown', e => {
+    if (e.target && e.target.tagName === 'INPUT') { if (e.key === 'Enter') saveScore(); return; }
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     keys[k] = true;
     if (k.startsWith('Arrow') || k === ' ') e.preventDefault();
     if (k === 'p' || k === 'Escape') togglePause();
-    if ((k === ' ' || k === 'Enter') && (state === 'menu' || state === 'over')) start();
+    if (k === ' ' || k === 'e') { if (state === 'play') howl(); else if (state === 'cutscene') startBoss(); }
+    if (k === 'Enter') { if (state === 'menu') start(); else if (state === 'cutscene') startBoss(); }
   });
   window.addEventListener('keyup', e => { keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
-  function setPointer(e) { pointer.x = e.clientX; pointer.y = e.clientY; }
+  const setPointer = e => { pointer.x = e.clientX; pointer.y = e.clientY; };
   cv.addEventListener('pointerdown', e => { pointer.active = true; setPointer(e); });
   cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || pointer.active) { pointer.active = true; setPointer(e); } });
   cv.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') pointer.active = false; });
   document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') togglePause(); });
 
+  $('superBtn').addEventListener('pointerdown', e => { e.stopPropagation(); howl(); });
   $('playBtn').onclick = start;
   $('againBtn').onclick = start;
   $('shopPlay').onclick = start;
+  $('fightBtn').onclick = startBoss;
   $('shopBtn').onclick = () => showShop('menu');
   $('overShopBtn').onclick = () => showShop('over');
   $('shopBack').onclick = () => shopReturn === 'over' ? (state = 'over', showOnly('over')) : showMenu();
+  $('fameBtn').onclick = showFame;
+  $('fameBack').onclick = showMenu;
   $('menuBtn').onclick = showMenu;
   $('resumeBtn').onclick = togglePause;
   $('quitBtn').onclick = showMenu;
+  $('saveBtn').onclick = saveScore;
+  $('cardBtn').onclick = downloadCard;
+  $('shareBtn').onclick = share;
 
   // ---------- Bucle ----------
   function loop(now) {
     const dt = Math.min(0.033, (now - last) / 1000 || 0);
     last = now;
-    if (state === 'play') { update(dt); if (G) hud(); }
-    else if (state === 'over' && G) {
-      // dejar que las partículas terminen
-      for (const q of G.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt; }
-    }
+    if (state === 'play') { update(dt); if (G && state === 'play') hud(); }
+    else if (G && (state === 'over' || state === 'cutscene')) stepFx(dt);
     draw(dt);
     requestAnimationFrame(loop);
   }
