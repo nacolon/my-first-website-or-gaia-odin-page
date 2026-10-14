@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Outs of Space: Gaia vs Apolo</title>
-  <meta name="description" content="Ayuda a Gaia, la perrita astronauta, a esquivar meteoritos y derrotar a Apolo.">
+  <title>Outs of Space: Gaia vs Apolo y Nyx</title>
+  <meta name="description" content="Ayuda a Gaia, la perrita astronauta, a esquivar meteoritos y derrotar a Apolo y a Nyx.">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -128,10 +128,14 @@
       background: #ffffff10; color: var(--text); user-select: text; -webkit-user-select: text;
     }
     .name-box button { margin: 0; }
-    #bossIntro .card { max-width: 520px; padding: 0; overflow: hidden; border-color: #ff4d5e66; }
-    #bossIntro img { width: 100%; display: block; }
-    #bossIntro .txt { padding: 16px; }
+    #bossIntro .card, #levelUp .card { max-width: 520px; padding: 0; overflow: hidden; border-color: #ff4d5e66; }
+    #levelUp .card { border-color: #a855f766; }
+    #bossIntro img, #levelUp img { width: 100%; display: block; }
+    #bossIntro .txt, #levelUp .txt { padding: 16px; }
     #bossIntro h2 { color: var(--danger); font-size: 1.8em; margin: 0 0 6px; }
+    #bossIntro.nyx h2 { color: var(--accent2); }
+    #bossIntro.nyx .card { border-color: #a855f766; }
+    #levelUp h2 { color: var(--accent2); font-size: 1.5em; margin: 0 0 6px; }
     .invent { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 10px 0; font-size: .75em; color: var(--muted); }
     .invent div { background: #ffffff0d; border-radius: 10px; padding: 8px 4px; }
     .invent b { display: block; font-size: 1.6em; }
@@ -175,7 +179,7 @@
       <div class="small">Récord <span id="hudBest">0</span></div>
     </div>
   </div>
-  <div id="bossBar">APOLO<div class="track"><div class="fill" id="bossFill"></div></div></div>
+  <div id="bossBar"><span id="bossName">APOLO</span><div class="track"><div class="fill" id="bossFill"></div></div></div>
   <button id="pauseBtn" title="Pausa (P)" aria-label="Pausa">⏸</button>
   <button id="superBtn" title="Súper Aullido (Espacio)"><span>🐺</span>AULLIDO</button>
 
@@ -184,8 +188,8 @@
     <div class="card">
       <img class="logo" src="assets/logo.jpg" alt="Outs of Space">
       <img class="hero" src="assets/gaia-head.png" alt="Gaia">
-      <p class="sub">Gaia vs Apolo</p>
-      <p style="margin:0 0 6px">Gaia, la perrita astronauta, viaja por el espacio. Esquiva los meteoritos, rompe todo lo que se cruce y llega hasta el agujero negro para derrotar a <b style="color:var(--danger)">Apolo</b>.</p>
+      <p class="sub">Gaia vs Apolo y Nyx</p>
+      <p style="margin:0 0 6px">Gaia, la perrita astronauta, viaja por el espacio. Esquiva los meteoritos, rompe todo lo que se cruce y derrota a <b style="color:var(--danger)">Apolo</b> en el agujero negro. Del otro lado te espera <b style="color:var(--accent2)">Nyx</b>…</p>
       <div class="invent">
         <div><b>📣</b>Ladri-Cañón<br>dispara solo</div>
         <div><b>🫧</b>Burbuja de Hueso<br>escudo</div>
@@ -198,6 +202,7 @@
       </div>
       <div class="list" id="mMissions"></div>
       <button id="playBtn">▶ Jugar</button>
+      <button class="ghost" id="lvl2Btn" hidden>🌙 Nivel 2</button>
       <button class="ghost" id="shopBtn">Mejoras</button>
       <button class="ghost" id="fameBtn">🏆 Récords</button>
       <div class="vol">
@@ -214,11 +219,26 @@
   <!-- Intro del jefe -->
   <div class="overlay" id="bossIntro">
     <div class="card">
-      <img src="assets/apolo.jpg" alt="Apolo en su nave roja frente al agujero negro">
+      <img id="bossImg" src="assets/apolo.jpg" alt="El jefe en su nave">
       <div class="txt">
-        <h2>¡APOLO!</h2>
-        <p style="margin:0 0 10px">«Nadie escapa de mi agujero negro, Gaia. Tu viaje termina aquí.»</p>
+        <h2 id="bossTitle">¡APOLO!</h2>
+        <p id="bossQuote" style="margin:0 0 10px">«Nadie escapa de mi agujero negro, Gaia. Tu viaje termina aquí.»</p>
+        <p class="hint" id="bossPowers" style="margin:0 0 10px"></p>
         <button class="gold" id="fightBtn">⚔️ ¡A pelear!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nivel completado -->
+  <div class="overlay" id="levelUp">
+    <div class="card">
+      <img src="assets/nyx.jpg" alt="Nyx, la doberman, en su nave negra y morada junto a un púlsar">
+      <div class="txt">
+        <p class="sub" style="margin:0 0 4px">¡NIVEL 1 COMPLETADO! 🏆</p>
+        <h2>Nivel 2: El Reino de Nyx</h2>
+        <p style="margin:0 0 8px">Gaia cruzó el agujero negro… pero del otro lado la espera <b style="color:var(--accent2)">Nyx</b>, la dama de la noche. Ahora hay cristales lunares, rayos de púlsar y minas de sombra que te persiguen.</p>
+        <p class="hint" style="margin:0 0 10px">❤️ Vidas recargadas · todo va más rápido</p>
+        <button class="gold" id="lvl2Go">🚀 Ir al Nivel 2</button>
       </div>
     </div>
   </div>
@@ -302,7 +322,7 @@
 
   // ---------- Imágenes ----------
   const IMG = {};
-  [['logo', 'jpg'], ['gaia-head', 'png'], ['apolo-head', 'png']].forEach(([n, ext]) => {
+  [['logo', 'jpg'], ['gaia-head', 'png'], ['apolo-head', 'png'], ['nyx-head', 'png']].forEach(([n, ext]) => {
     const i = new Image(); i.src = `assets/${n}.${ext}`; IMG[n] = i;
   });
   const ready = i => i && i.complete && i.naturalWidth > 0;
@@ -311,6 +331,7 @@
   const KEY = 'outs-of-space-v1';
   const defaults = {
     musicVol: 45, sfxVol: 80,
+    unlocked2: false,
     best: 0, dust: 0, games: 0, wins: 0, streak: 0, lastDay: '', muted: false, lastName: '',
     up: { bark: 0, lives: 0, power: 0, howl: 0, magnet: 0 },
     missions: null, missionLevel: 0, board: []
@@ -461,11 +482,27 @@
   const stars = Array.from({ length: 160 }, () => ({ x: Math.random(), y: Math.random(), z: Math.random() * 0.9 + 0.1 }));
 
   // ---------- Juego ----------
-  const SECTORS = [
-    { name: 'Cinturón de Meteoritos', len: 30 },
-    { name: 'Nebulosa Violeta', len: 32 },
-    { name: 'Lluvia de Fuego', len: 34 },
+  const LEVELS = [
+    { boss: 'apolo', sectors: [
+      { name: 'Cinturón de Meteoritos', len: 30 },
+      { name: 'Nebulosa Violeta', len: 32 },
+      { name: 'Lluvia de Fuego', len: 34 },
+    ] },
+    { boss: 'nyx', sectors: [
+      { name: 'Campo de Cristales Lunares', len: 32 },
+      { name: 'Tormenta de Púlsares', len: 34 },
+      { name: 'Nebulosa de Sombras', len: 36 },
+    ] },
   ];
+  const BOSSES = {
+    apolo: { name: 'Apolo', img: 'assets/apolo.jpg', max: 150, hw: 95, hh: 55,
+      quote: '«Nadie escapa de mi agujero negro, Gaia. Tu viaje termina aquí.»',
+      powers: 'Láseres rojos · disparos triples · ataque final' },
+    nyx: { name: 'Nyx', img: 'assets/nyx.jpg', max: 230, hw: 115, hh: 42,
+      quote: '«Apolo era solo un cachorro. Yo soy la noche misma, Gaia.»',
+      powers: '🌙 Lunas boomerang · ⚡ Rayos de púlsar · 🌑 Se vuelve sombra y se teletransporta' },
+  };
+  const SECTORS_OF = () => LEVELS[G.level].sectors;
   const ITEMS = { shield: '🫧', triple: '🔱', magnet: '🧲', bone: '❤️' };
 
   let state = 'menu', G = null, last = 0;
@@ -476,7 +513,7 @@
   const TOUCH_SPEED = 1.3;
   const rand = (a, b) => a + Math.random() * (b - a);
 
-  function newGame() {
+  function newGame(level = 0) {
     const lives = 3 + save.up.lives;
     G = {
       t: 0, score: 0, dust: 0, combo: 0, maxCombo: 0, comboTimer: 0,
@@ -486,23 +523,25 @@
       ents: [], shots: [], enemyShots: [], parts: [], texts: [], waves: [],
       spawn: 0, fire: 0, howl: 0,
       power: { shield: 0, triple: 0, magnet: 0 },
-      phase: 'sector', sector: 0, st: 0, banner: null, boss: null,
+      phase: 'sector', level, sector: 0, st: 0, banner: null, boss: null,
+      beams: [], beamT: 3, apoloDown: level > 0,
     };
-    setBanner(`Sector 1`, SECTORS[0].name);
+    setBanner(level ? 'Nivel 2 · Sector 1' : 'Sector 1', SECTORS_OF()[0].name);
     pointer.active = false;
   }
 
   function setBanner(title, sub) { G.banner = { title, sub, life: 2.4 }; }
-  const difficulty = () => G.phase === 'boss' ? 1.8 : 1 + G.sector * 0.55 + G.st / 70;
+  const difficulty = () => G.phase === 'boss' ? 1.8 + G.level * 0.5 : 1 + G.level * 0.9 + G.sector * 0.55 + G.st / 70;
+  const hostile = e => e.type === 'meteor' || e.type === 'junk' || e.type === 'mine';
   const mult = () => 1 + Math.floor(G.combo / 10);
 
   // --- Generación ---
   function spawnMeteor(big) {
     const d = difficulty();
     const r = big ? rand(26, 34) : rand(12, 18);
-    const fromSide = G.sector >= 1 && Math.random() < 0.25;
+    const fromSide = (G.sector >= 1 || G.level > 0) && Math.random() < 0.25;
     const e = {
-      type: 'meteor', r, hp: big ? 3 : 1, big,
+      type: 'meteor', kind: G.level ? 'crystal' : 'rock', r, hp: big ? 3 : 1, big,
       x: fromSide ? (Math.random() < 0.5 ? -r : W + r) : rand(r, W - r), y: fromSide ? rand(-40, H * 0.3) : -r - 10,
       vy: rand(120, 180) * (0.7 + d * 0.3), vx: 0, near: false, rot: Math.random() * 6, vr: rand(-2, 2),
       shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
@@ -513,8 +552,23 @@
   function spawnDust(x, y, n = 1, spread = 0) {
     for (let i = 0; i < n; i++) G.ents.push({ type: 'dust', r: 7, x: x + rand(-spread, spread), y: y - i * (spread ? 0 : 24), vx: rand(-15, 15), vy: rand(110, 150) });
   }
+  function spawnMine(x, y) {
+    G.ents.push({ type: 'mine', r: 13, hp: 2, x, y, vx: 0, vy: rand(80, 120), rot: 0, vr: 2 });
+  }
+  function addBeam(vertical, pos, warn = 1.0) {
+    G.beams.push({ v: vertical, pos, warn, on: 0.45, w: 30 });
+    beep(1400, 0.2, 'sine', 0.03, 400);
+  }
   function spawn() {
     const d = difficulty(), r = Math.random();
+    if (G.level > 0) { // Nivel 2: cristales, minas de sombra
+      const mineP = 0.05 + G.sector * 0.05 + (G.phase === 'boss' ? 0.04 : 0);
+      if (r < 0.06) G.ents.push({ type: 'junk', r: 20, hp: 3, x: rand(30, W - 30), y: -30, vx: rand(-20, 20), vy: 95, rot: 0, vr: rand(-1, 1) });
+      else if (r < 0.06 + mineP) spawnMine(rand(30, W - 30), -20);
+      else if (r < 0.06 + mineP + Math.min(0.6, 0.28 + d * 0.06)) spawnMeteor(Math.random() < 0.2 + G.sector * 0.07);
+      else spawnDust(rand(20, W - 20), -10, Math.random() < 0.2 ? 5 : 1);
+      return;
+    }
     if (r < 0.06) G.ents.push({ type: 'junk', r: 20, hp: 3, x: rand(30, W - 30), y: -30, vx: rand(-20, 20), vy: 90, rot: 0, vr: rand(-1, 1) });
     else if (r < 0.06 + Math.min(0.62, 0.3 + d * 0.08)) spawnMeteor(Math.random() < 0.12 + G.sector * 0.06);
     else spawnDust(rand(20, W - 20), -10, Math.random() < 0.2 ? 5 : 1);
@@ -550,14 +604,29 @@
   function destroyMeteor(e) {
     G.meteors++; addCombo(); chargeHowl(e.big ? 10 : 4);
     const pts = (e.big ? 60 : 25) * mult(); G.score += pts;
-    burst(e.x, e.y, '#ff9a3c', e.big ? 24 : 12, e.big ? 220 : 150);
-    floatText(e.x, e.y, `+${pts}`, '#ff9a3c', 13);
-    beep(e.big ? 110 : 180, 0.12, 'square', 0.04, -80);
-    if (e.big) for (let i = 0; i < 2; i++) G.ents.push(Object.assign({}, e, {
-      r: e.r * 0.5, hp: 1, big: false, x: e.x + (i ? 10 : -10), vx: (i ? 1 : -1) * rand(60, 120), vy: e.vy * 0.8, near: false,
-      shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
-    }));
+    const crystal = e.kind === 'crystal', col = crystal ? '#c084fc' : '#ff9a3c';
+    burst(e.x, e.y, col, e.big ? 24 : 12, e.big ? 220 : 150);
+    floatText(e.x, e.y, `+${pts}`, col, 13);
+    if (crystal) beep(e.big ? 900 : 1300, 0.12, 'triangle', 0.04, 300);
+    else beep(e.big ? 110 : 180, 0.12, 'square', 0.04, -80);
+    const n = crystal ? 3 : 2; // los cristales grandes se rompen en 3 esquirlas
+    if (e.big) for (let i = 0; i < n; i++) {
+      const a = Math.PI * (0.15 + 0.7 * i / (n - 1));
+      G.ents.push(Object.assign({}, e, {
+        r: e.r * 0.5, hp: 1, big: false, x: e.x, y: e.y, vx: -Math.cos(a) * rand(90, 150), vy: Math.abs(e.vy) * 0.6 + Math.sin(a) * 60, near: false,
+        shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
+      }));
+    }
     else if (Math.random() < 0.35) spawnDust(e.x, e.y, 2, 12);
+  }
+  function destroyMine(e) {
+    G.score += 35 * mult(); addCombo(); chargeHowl(5);
+    burst(e.x, e.y, '#a855f7', 20, 200); beep(90, 0.2, 'sawtooth', 0.05, -40);
+  }
+  function destroyEnt(e) {
+    if (e.type === 'meteor') destroyMeteor(e);
+    else if (e.type === 'junk') destroyJunk(e);
+    else if (e.type === 'mine') destroyMine(e);
   }
   function destroyJunk(e) {
     G.score += 40 * mult(); addCombo(); chargeHowl(6);
@@ -568,20 +637,32 @@
   }
 
   function damageBoss(n) {
-    const b = G.boss; if (!b || b.hp <= 0) return;
+    const b = G.boss; if (!b || b.hp <= 0 || b.vanish > 0) return;
     b.hp -= n; b.flash = 0.08; G.score += 10 * n;
-    if (b.hp <= b.max * 0.5 && b.stage < 2) { b.stage = 2; setBanner('¡Apolo se enfurece!', 'Disparos triples'); beep(90, 0.5, 'sawtooth', 0.08, -40); }
-    if (b.hp <= b.max * 0.2 && b.stage < 3) { b.stage = 3; setBanner('¡Último esfuerzo!', 'Apolo lo da todo'); beep(80, 0.5, 'sawtooth', 0.08, -40); }
+    const nyx = b.kind === 'nyx';
+    if (b.hp <= b.max * (nyx ? 0.6 : 0.5) && b.stage < 2) {
+      b.stage = 2; beep(90, 0.5, 'sawtooth', 0.08, -40);
+      nyx ? setBanner('¡Nyx invoca los púlsares!', 'Mira la línea de aviso y apártate') : setBanner('¡Apolo se enfurece!', 'Disparos triples');
+    }
+    if (b.hp <= b.max * (nyx ? 0.25 : 0.2) && b.stage < 3) {
+      b.stage = 3; beep(80, 0.5, 'sawtooth', 0.08, -40);
+      nyx ? setBanner('¡Nyx se vuelve sombra!', 'Se teletransporta y suelta minas') : setBanner('¡Último esfuerzo!', 'Apolo lo da todo');
+    }
     if (b.hp <= 0) {
       b.hp = 0; G.phase = 'won'; G.shake = 20;
-      const bonus = 5000 + G.lives * 500;
+      const bonus = nyx ? 10000 + G.lives * 800 : 5000 + G.lives * 500;
       G.score += bonus;
-      for (let i = 0; i < 6; i++) setTimeout(() => { if (G) { burst(b.x + rand(-80, 80), b.y + rand(-40, 40), i % 2 ? '#ff4d5e' : '#ffcf6b', 30, 300); beep(70 + i * 20, 0.3, 'sawtooth', 0.08, -30); } }, i * 180);
-      floatText(W / 2, H / 2, `¡APOLO DERROTADO! +${bonus}`, '#ffcf6b', 24);
-      G.ents.forEach(e => { if (e.type === 'meteor') burst(e.x, e.y, '#ff9a3c', 8); });
-      G.ents = G.ents.filter(e => e.type !== 'meteor'); G.enemyShots = [];
+      const cols = nyx ? ['#a855f7', '#e9d5ff'] : ['#ff4d5e', '#ffcf6b'];
+      for (let i = 0; i < 6; i++) setTimeout(() => { if (G) { burst(b.x + rand(-80, 80), b.y + rand(-40, 40), cols[i % 2], 30, 300); beep(70 + i * 20, 0.3, 'sawtooth', 0.08, -30); } }, i * 180);
+      floatText(W / 2, H / 2, `¡${BOSSES[b.kind].name.toUpperCase()} DERROTAD${nyx ? 'A' : 'O'}! +${bonus}`, '#ffcf6b', 24);
+      G.ents.forEach(e => { if (hostile(e)) burst(e.x, e.y, '#ff9a3c', 8); });
+      G.ents = G.ents.filter(e => !hostile(e)); G.enemyShots = []; G.beams = [];
+      if (!nyx) G.apoloDown = true;
       const g = G;
-      setTimeout(() => { if (G === g && (state === 'play' || state === 'pause')) endGame(true); }, 2600);
+      setTimeout(() => {
+        if (G !== g || (state !== 'play' && state !== 'pause')) return;
+        nyx ? endGame(true) : showLevelUp();
+      }, 2600);
     }
   }
 
@@ -596,22 +677,44 @@
   function nextSector() {
     G.score += 500; floatText(W / 2, H * 0.45, '+500 sector superado', '#8cc8ff', 18);
     G.sector++; G.st = 0;
-    if (G.sector < SECTORS.length) { setBanner(`Sector ${G.sector + 1}`, SECTORS[G.sector].name); beep(520, 0.3, 'triangle', 0.06, 300); }
+    if (G.sector < SECTORS_OF().length) { setBanner(`${G.level ? 'Nivel 2 · ' : ''}Sector ${G.sector + 1}`, SECTORS_OF()[G.sector].name); beep(520, 0.3, 'triangle', 0.06, 300); }
     else {
+      const kind = LEVELS[G.level].boss, B = BOSSES[kind];
+      $('bossImg').src = B.img; $('bossTitle').textContent = `¡${B.name.toUpperCase()}!`;
+      $('bossQuote').textContent = B.quote; $('bossPowers').textContent = 'Poderes: ' + B.powers;
+      $('bossIntro').classList.toggle('nyx', kind === 'nyx');
+      G.beams = [];
       G.phase = 'intro'; state = 'cutscene'; showOnly('bossIntro'); pauseMusic();
       beep(70, 0.8, 'sawtooth', 0.09, -20);
     }
   }
   function startBoss() {
-    if (state !== 'cutscene') return;
+    if (state !== 'cutscene' || G.phase !== 'intro') return;
     state = 'play'; G.phase = 'boss'; showOnly(null);
     restartMusic('boss');
-    G.ents = G.ents.filter(e => e.type !== 'meteor');
-    const max = 150;
-    G.boss = { x: W / 2, y: -100, hp: max, max, t: 0, shotT: 1.5, stage: 1, flash: 0 };
-    setBanner('Apolo', 'El agujero negro');
+    G.ents = G.ents.filter(e => !hostile(e));
+    const kind = LEVELS[G.level].boss, B = BOSSES[kind];
+    const sc = Math.min(1, W / 470); // naves más pequeñas en teléfonos
+    G.boss = { kind, sc, x: W / 2, y: -100, hp: B.max, max: B.max, hw: B.hw * sc, hh: B.hh * sc, t: 0, shotT: 1.5, beamT: 2.5, tpT: 3,
+      vanish: 0, stage: 1, flash: 0, tx: W / 2, ty: 130, wanderT: 0 };
+    $('bossName').textContent = B.name.toUpperCase();
+    setBanner(B.name, kind === 'nyx' ? 'La dama de la noche' : 'El agujero negro');
     last = performance.now();
   }
+  function showLevelUp() {
+    state = 'cutscene'; G.phase = 'levelup'; showOnly('levelUp'); pauseMusic();
+    save.unlocked2 = true; persist();
+  }
+  function startLevel2() {
+    if (state !== 'cutscene' || G.phase !== 'levelup') return;
+    Object.assign(G, { level: 1, sector: 0, st: 0, phase: 'sector', boss: null, ents: [], enemyShots: [], beams: [], beamT: 4, lives: G.maxLives, inv: 1.5 });
+    state = 'play'; showOnly(null);
+    restartMusic('area');
+    setBanner('Nivel 2 · Sector 1', SECTORS_OF()[0].name);
+    floatText(G.p.x, G.p.y - 50, '❤️ Vidas recargadas', '#4ade80', 18);
+    last = performance.now();
+  }
+  function continueCutscene() { if (G && G.phase === 'levelup') startLevel2(); else startBoss(); }
 
   // --- Actualización ---
   function update(dt) {
@@ -644,13 +747,22 @@
     // Fases
     if (G.phase === 'sector') {
       G.st += dt;
-      if (G.st >= SECTORS[G.sector].len) { nextSector(); if (state !== 'play') return; }
+      if (G.st >= SECTORS_OF()[G.sector].len) { nextSector(); if (state !== 'play') return; }
+      // Nivel 2: rayos de púlsar desde el sector 2
+      if (G.level > 0 && G.sector >= 1 && G.phase === 'sector') {
+        G.beamT -= dt;
+        if (G.beamT <= 0) {
+          const v = Math.random() < 0.6;
+          addBeam(v, v ? rand(30, W - 30) : rand(140, H - 60));
+          G.beamT = G.sector === 1 ? rand(1.8, 2.8) : rand(2.4, 3.4);
+        }
+      }
     }
     if (G.phase === 'sector' || G.phase === 'boss') {
       G.spawn -= dt;
       if (G.spawn <= 0) {
         spawn();
-        const base = G.phase === 'boss' ? 0.75 - (G.boss.stage - 1) * 0.12 : Math.max(0.16, 0.45 / difficulty());
+        const base = G.phase === 'boss' ? 0.75 - (G.boss.stage - 1) * 0.12 + (G.level ? 0.1 : 0) : Math.max(0.14, 0.45 / difficulty());
         G.spawn = base * rand(0.6, 1.4);
       }
     }
@@ -680,14 +792,14 @@
       let used = false;
       for (let j = G.ents.length - 1; j >= 0 && !used; j--) {
         const e = G.ents[j];
-        if ((e.type === 'meteor' || e.type === 'junk') && Math.hypot(e.x - s.x, e.y - s.y) < e.r + s.r) {
+        if (hostile(e) && Math.hypot(e.x - s.x, e.y - s.y) < e.r + s.r) {
           used = true; e.hp--; e.flash = 0.06;
-          if (e.hp <= 0) { G.ents.splice(j, 1); e.type === 'meteor' ? destroyMeteor(e) : destroyJunk(e); }
+          if (e.hp <= 0) { G.ents.splice(j, 1); destroyEnt(e); }
           else burst(s.x, s.y, '#ffcf6b', 4, 80);
         }
       }
       const b = G.boss;
-      if (!used && b && b.hp > 0 && ((s.x - b.x) / 95) ** 2 + ((s.y - b.y) / 55) ** 2 < 1) {
+      if (!used && b && b.hp > 0 && !(b.vanish > 0) && ((s.x - b.x) / b.hw) ** 2 + ((s.y - b.y) / b.hh) ** 2 < 1) {
         used = true; damageBoss(1); burst(s.x, s.y, '#ff4d5e', 5, 100);
       }
       if (used || s.y < -20 || s.x < -20 || s.x > W + 20) G.shots.splice(i, 1);
@@ -698,13 +810,13 @@
       const w = G.waves[i]; w.r += 900 * dt;
       for (let j = G.ents.length - 1; j >= 0; j--) {
         const e = G.ents[j];
-        if ((e.type === 'meteor' || e.type === 'junk') && Math.hypot(e.x - w.x, e.y - w.y) < w.r) {
-          G.ents.splice(j, 1); e.type === 'meteor' ? destroyMeteor(Object.assign(e, { big: false })) : destroyJunk(e);
+        if (hostile(e) && Math.hypot(e.x - w.x, e.y - w.y) < w.r) {
+          G.ents.splice(j, 1); destroyEnt(e.type === 'meteor' ? Object.assign(e, { big: false }) : e);
         }
       }
       G.enemyShots = G.enemyShots.filter(s => Math.hypot(s.x - w.x, s.y - w.y) > w.r);
       const b = G.boss;
-      if (b && !w.hitBoss && Math.hypot(b.x - w.x, b.y - w.y) < w.r) { w.hitBoss = true; damageBoss(14); floatText(b.x, b.y + 60, '-14', '#c9a7ff', 22); }
+      if (b && !w.hitBoss && !(b.vanish > 0) && Math.hypot(b.x - w.x, b.y - w.y) < w.r) { w.hitBoss = true; damageBoss(14); floatText(b.x, b.y + 60, '-14', '#c9a7ff', 22); }
       if (w.r > Math.hypot(W, H)) G.waves.splice(i, 1);
     }
 
@@ -715,15 +827,20 @@
       if ((e.type === 'dust' || e.type === 'item') && Math.hypot(e.x - p.x, e.y - p.y) < magnetR) {
         const a = Math.atan2(p.y - e.y, p.x - e.x);
         e.x += Math.cos(a) * 440 * dt; e.y += Math.sin(a) * 440 * dt;
-      } else { e.x += e.vx * dt; e.y += e.vy * dt; }
+      } else {
+        if (e.type === 'mine') { // las minas de sombra persiguen a Gaia
+          e.vx += Math.sign(p.x - e.x) * 140 * dt; e.vx = Math.max(-110, Math.min(110, e.vx));
+        }
+        e.x += e.vx * dt; e.y += e.vy * dt;
+      }
       if (e.vr) e.rot += e.vr * dt;
       if (e.flash) e.flash -= dt;
       const dist = Math.hypot(e.x - p.x, e.y - p.y);
 
-      if (dist < e.r + p.r - (e.type === 'meteor' || e.type === 'junk' ? 6 : -6)) {
-        if (e.type === 'meteor' || e.type === 'junk') {
+      if (dist < e.r + p.r - (hostile(e) ? 6 : -6)) {
+        if (hostile(e)) {
           if (G.inv > 0) continue;
-          G.ents.splice(i, 1); burst(e.x, e.y, '#ff9a3c', 12); hitPlayer();
+          G.ents.splice(i, 1); burst(e.x, e.y, e.type === 'mine' || e.kind === 'crystal' ? '#a855f7' : '#ff9a3c', 12); hitPlayer();
           if (state !== 'play') return;
           continue;
         }
@@ -753,9 +870,23 @@
       if (e.y > H + 50 || e.x < -80 || e.x > W + 80) G.ents.splice(i, 1);
     }
 
-    // Apolo
+    // Rayos de púlsar
+    for (let i = G.beams.length - 1; i >= 0; i--) {
+      const bm = G.beams[i];
+      if (bm.warn > 0) {
+        bm.warn -= dt;
+        if (bm.warn <= 0) { G.shake = Math.max(G.shake, 6); beep(1800, 0.35, 'sawtooth', 0.04, -1500); }
+        continue;
+      }
+      bm.on -= dt;
+      const d = bm.v ? Math.abs(p.x - bm.pos) : Math.abs(p.y - bm.pos);
+      if (d < bm.w / 2 + p.r * 0.6) { hitPlayer(); if (state !== 'play') return; }
+      if (bm.on <= 0) G.beams.splice(i, 1);
+    }
+
     const b = G.boss;
-    if (b && b.hp > 0) {
+    if (b && b.hp > 0 && b.kind === 'nyx') { updateNyx(b, p, dt); if (state !== 'play') return; }
+    else if (b && b.hp > 0) { // Apolo
       b.t += dt; b.flash = Math.max(0, b.flash - dt);
       const speed = 0.7 + b.stage * 0.2;
       const tx = W / 2 + Math.sin(b.t * speed) * Math.max(0, W / 2 - 100);
@@ -772,17 +903,66 @@
         b.shotT = b.stage === 1 ? 1.1 : b.stage === 2 ? 1.0 : 0.75;
         beep(140, 0.12, 'sawtooth', 0.04, 200);
       }
-      if (((p.x - b.x) / 95) ** 2 + ((p.y - b.y) / 55) ** 2 < 1) hitPlayer();
+      if (((p.x - b.x) / b.hw) ** 2 + ((p.y - b.y) / b.hh) ** 2 < 1) hitPlayer();
       if (state !== 'play') return;
     }
     for (let i = G.enemyShots.length - 1; i >= 0; i--) {
-      const s = G.enemyShots[i]; s.x += s.vx * dt; s.y += s.vy * dt;
+      const s = G.enemyShots[i];
+      if (s.moon) { s.vx += s.ax * dt; s.vy += s.ay * dt; s.t += dt; s.rot += 10 * dt; }
+      s.x += s.vx * dt; s.y += s.vy * dt;
       if (Math.hypot(s.x - p.x, s.y - p.y) < s.r + p.r - 6) { G.enemyShots.splice(i, 1); hitPlayer(); if (state !== 'play') return; continue; }
-      if (s.y > H + 20 || s.y < -40 || s.x < -20 || s.x > W + 20) G.enemyShots.splice(i, 1);
+      if (s.y > H + 40 || s.y < -60 || s.x < -60 || s.x > W + 60 || s.t > 6) G.enemyShots.splice(i, 1);
     }
 
     stepFx(dt);
   }
+  // Nyx: lunas boomerang, rayos de púlsar y teletransporte de sombra
+  function updateNyx(b, p, dt) {
+    b.t += dt; b.flash = Math.max(0, b.flash - dt);
+    if (b.vanish > 0) {
+      const before = b.vanish; b.vanish -= dt;
+      if (before > 0.4 && b.vanish <= 0.4) { // reaparece en otro lugar
+        b.x = b.tx = rand(Math.min(120 * b.sc, W / 2), Math.max(W / 2, W - 120 * b.sc)); b.y = b.ty = rand(100, 200);
+        burst(b.x, b.y, '#a855f7', 30, 220); spawnMine(b.x - 50, b.y + 30); spawnMine(b.x + 50, b.y + 30);
+      }
+      return;
+    }
+    b.wanderT -= dt;
+    if (b.wanderT <= 0) {
+      b.tx = rand(Math.min(120 * b.sc, W / 2), Math.max(W / 2, W - 120 * b.sc)); b.ty = rand(100, 170) + (b.stage === 3 ? rand(0, H * 0.15) : 0);
+      b.wanderT = rand(1.4, 2.4) - b.stage * 0.2;
+    }
+    b.x += (b.tx - b.x) * Math.min(1, dt * 2.2); b.y += (b.ty - b.y) * Math.min(1, dt * 2);
+    // 🌙 lunas crecientes que van y vuelven como boomerang
+    b.shotT -= dt;
+    if (b.shotT <= 0) {
+      const a = Math.atan2(p.y - b.y, p.x - b.x), n = b.stage + 1;
+      for (let k = 0; k < n; k++) {
+        const aa = a + (k - (n - 1) / 2) * 0.35, v = 430, side = k % 2 ? 1 : -1;
+        G.enemyShots.push({ moon: true, x: b.x, y: b.y + 20, r: 10, t: 0, rot: 0,
+          vx: Math.cos(aa) * v, vy: Math.sin(aa) * v,
+          ax: -Math.cos(aa) * 270 + -Math.sin(aa) * 90 * side, ay: -Math.sin(aa) * 270 + Math.cos(aa) * 90 * side });
+      }
+      b.shotT = [1.5, 1.3, 1.1][b.stage - 1];
+      beep(500, 0.2, 'triangle', 0.05, -250);
+    }
+    // ⚡ rayos de púlsar dirigidos a Gaia
+    if (b.stage >= 2) {
+      b.beamT -= dt;
+      if (b.beamT <= 0) {
+        addBeam(true, p.x, 0.9);
+        if (b.stage === 3) addBeam(false, p.y, 1.1);
+        b.beamT = b.stage === 2 ? 2.8 : 3.2;
+      }
+    }
+    // 🌑 se vuelve sombra y se teletransporta
+    if (b.stage === 3) {
+      b.tpT -= dt;
+      if (b.tpT <= 0) { b.vanish = 0.8; b.tpT = rand(3, 4.5); beep(200, 0.5, 'sine', 0.06, -150); }
+    }
+    if (((p.x - b.x) / b.hw) ** 2 + ((p.y - b.y) / b.hh) ** 2 < 1) hitPlayer();
+  }
+
   function stepFx(dt) {
     for (let i = G.parts.length - 1; i >= 0; i--) {
       const q = G.parts[i]; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.96; q.vy *= 0.96; q.life -= dt;
@@ -796,11 +976,18 @@
   // ---------- Dibujo ----------
   function drawBg(dt, speed) {
     const boss = G && (G.phase === 'boss' || G.phase === 'won' || G.phase === 'intro');
+    const lvl = G ? G.level : 0;
     const g = ctx.createRadialGradient(W * 0.3, H * 0.2, 0, W * 0.5, H * 0.5, Math.max(W, H));
-    const tint = G && !boss ? ['#16204a', '#2a1650', '#3a1a2a'][Math.min(2, G.sector)] : '#16204a';
-    g.addColorStop(0, tint); g.addColorStop(0.55, '#0b0f26'); g.addColorStop(1, '#03040a');
+    const tints = lvl ? ['#241550', '#0f2a4a', '#2a0f3a'] : ['#16204a', '#2a1650', '#3a1a2a'];
+    const tint = G && !boss ? tints[Math.min(2, G.sector)] : lvl ? '#1c1040' : '#16204a';
+    g.addColorStop(0, tint); g.addColorStop(0.55, lvl ? '#0d0a24' : '#0b0f26'); g.addColorStop(1, '#03040a');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    if (boss) { // agujero negro de Apolo
+    if (lvl && G.phase !== 'levelup') { // luna creciente de Nyx
+      const cx = W * 0.78, cy = H * 0.13, R = Math.min(W, H) * (boss ? 0.2 : 0.11);
+      ctx.save(); ctx.shadowColor = '#c084fc'; ctx.shadowBlur = 40;
+      ctx.fillStyle = '#e9d5ff'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      ctx.fillStyle = '#150d33'; ctx.beginPath(); ctx.arc(cx + R * 0.45, cy - R * 0.2, R * 0.92, 0, Math.PI * 2); ctx.fill();
+    } else if (boss) { // agujero negro de Apolo
       const cx = W / 2, cy = H * 0.12, R = Math.min(W, H) * 0.32;
       const rg = ctx.createRadialGradient(cx, cy, R * 0.45, cx, cy, R * 1.3);
       rg.addColorStop(0, '#000'); rg.addColorStop(0.35, '#ff9a3c66'); rg.addColorStop(0.5, '#ffcf6b33'); rg.addColorStop(1, '#0000');
@@ -886,8 +1073,52 @@
     ctx.restore();
   }
 
+  function drawCrystal(e) {
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
+    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 16;
+    const r = e.r;
+    ctx.fillStyle = e.flash > 0 ? '#fff' : '#6d28d9';
+    ctx.beginPath(); ctx.moveTo(0, -r * 1.25); ctx.lineTo(r * 0.75, 0); ctx.lineTo(0, r * 1.25); ctx.lineTo(-r * 0.75, 0); ctx.closePath(); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = e.flash > 0 ? '#fff' : '#c4b5fd';
+    ctx.beginPath(); ctx.moveTo(0, -r * 1.25); ctx.lineTo(r * 0.3, 0); ctx.lineTo(0, r * 1.25); ctx.lineTo(-r * 0.15, 0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawMine(e, t) {
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
+    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2.5;
+    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * e.r, Math.sin(a) * e.r); ctx.lineTo(Math.cos(a) * (e.r + 6), Math.sin(a) * (e.r + 6)); ctx.stroke(); }
+    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 14;
+    ctx.fillStyle = e.flash > 0 ? '#fff' : '#120a22';
+    ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#c084fc'; ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.4;
+    ctx.beginPath(); ctx.arc(0, 0, e.r * 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function drawBeams(t) {
+    for (const bm of G.beams) {
+      ctx.save();
+      if (bm.warn > 0) { // línea de aviso
+        ctx.globalAlpha = 0.35 + Math.sin(t * 30) * 0.25;
+        ctx.strokeStyle = '#bfe3ff'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
+        ctx.beginPath();
+        if (bm.v) { ctx.moveTo(bm.pos, 0); ctx.lineTo(bm.pos, H); } else { ctx.moveTo(0, bm.pos); ctx.lineTo(W, bm.pos); }
+        ctx.stroke();
+      } else {
+        const w = bm.w * (0.7 + Math.random() * 0.3);
+        const g = bm.v ? ctx.createLinearGradient(bm.pos - w, 0, bm.pos + w, 0) : ctx.createLinearGradient(0, bm.pos - w, 0, bm.pos + w);
+        g.addColorStop(0, '#5aa9ff00'); g.addColorStop(0.35, '#7cc4ffcc'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(0.65, '#7cc4ffcc'); g.addColorStop(1, '#5aa9ff00');
+        ctx.fillStyle = g;
+        if (bm.v) ctx.fillRect(bm.pos - w, 0, w * 2, H); else ctx.fillRect(0, bm.pos - w, W, w * 2);
+      }
+      ctx.restore();
+    }
+  }
+
   function drawEnt(e, t) {
-    if (e.type === 'meteor') return drawMeteor(e);
+    if (e.type === 'meteor') return e.kind === 'crystal' ? drawCrystal(e) : drawMeteor(e);
+    if (e.type === 'mine') return drawMine(e, t);
     ctx.save(); ctx.translate(e.x, e.y);
     if (e.type === 'dust') {
       ctx.rotate(t * 3 + e.x);
@@ -916,7 +1147,7 @@
   }
 
   function drawApolo(b, t) {
-    ctx.save(); ctx.translate(b.x, b.y);
+    ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.sc, b.sc);
     const flash = b.flash > 0;
     // motores
     [-68, 68].forEach(x => {
@@ -943,6 +1174,37 @@
     ctx.restore();
   }
 
+  function drawNyx(b, t) {
+    ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.sc, b.sc);
+    if (b.vanish > 0) ctx.globalAlpha = 0.12 + Math.random() * 0.15;
+    const flash = b.flash > 0;
+    // llama morada del cohete
+    const fl = ctx.createLinearGradient(100, 0, 160, 0);
+    fl.addColorStop(0, '#f0abfc'); fl.addColorStop(0.5, '#a855f7'); fl.addColorStop(1, '#a855f700');
+    ctx.fillStyle = fl; ctx.beginPath(); ctx.ellipse(122, 0, 34 + Math.sin(t * 25) * 5, 10, 0, 0, Math.PI * 2); ctx.fill();
+    // aletas
+    ctx.fillStyle = flash ? '#fff' : '#0e0b16'; ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(50, -16); ctx.lineTo(96, -44); ctx.lineTo(86, -12); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 18); ctx.lineTo(118, 46); ctx.lineTo(86, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // casco del cohete
+    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.moveTo(-125, 12);
+    ctx.quadraticCurveTo(-40, -28, 92, -18); ctx.lineTo(106, 0); ctx.lineTo(92, 18);
+    ctx.quadraticCurveTo(-40, 36, -125, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#2dd4bf'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-100, 12); ctx.quadraticCurveTo(-20, 22, 80, 10); ctx.stroke();
+    // cabina con Nyx
+    const R = 30, cy = -22;
+    if (ready(IMG['nyx-head'])) {
+      ctx.save(); ctx.beginPath(); ctx.arc(0, cy, R, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(IMG['nyx-head'], -R, cy - R, R * 2, R * 2); ctx.restore();
+    }
+    ctx.strokeStyle = '#cfe6ffaa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, cy, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
   function draw(dt) {
     const playing = state === 'play';
     const speed = playing && G ? 150 * difficulty() : 40;
@@ -964,10 +1226,20 @@
         ctx.beginPath(); ctx.arc(s.x, s.y + 6, s.r, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
         ctx.beginPath(); ctx.arc(s.x, s.y + 12, s.r * 0.7, Math.PI * 1.2, Math.PI * 1.8); ctx.stroke();
       }
-      if (G.boss && G.phase !== 'won') drawApolo(G.boss, t);
-      // láseres de Apolo
-      ctx.fillStyle = '#ff4d5e'; ctx.shadowColor = '#ff4d5e'; ctx.shadowBlur = 12;
-      for (const s of G.enemyShots) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); }
+      drawBeams(t);
+      if (G.boss && G.phase !== 'won') (G.boss.kind === 'nyx' ? drawNyx : drawApolo)(G.boss, t);
+      // disparos de los jefes
+      for (const s of G.enemyShots) {
+        if (s.moon) { // luna creciente
+          ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.rot);
+          ctx.fillStyle = '#e9d5ff'; ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 14;
+          ctx.beginPath(); ctx.arc(0, 0, s.r + 3, Math.PI * 0.2, Math.PI * 1.8); ctx.arc(4, 0, s.r - 1, Math.PI * 1.75, Math.PI * 0.25, true); ctx.fill();
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#ff4d5e'; ctx.shadowColor = '#ff4d5e'; ctx.shadowBlur = 12;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        }
+      }
       ctx.shadowBlur = 0;
       for (const q of G.parts) {
         ctx.globalAlpha = Math.max(0, q.life / q.max); ctx.fillStyle = q.color;
@@ -999,8 +1271,8 @@
     $('lifeFill').style.width = (lv / G.maxLives * 100) + '%';
     $('lifeFill').classList.toggle('low', lv <= 1);
     $('hudBest').textContent = save.best;
-    $('sector').textContent = G.phase === 'sector'
-      ? `Sector ${G.sector + 1}/3 · ${Math.ceil(SECTORS[G.sector].len - G.st)}s` : 'Jefe final';
+    $('sector').textContent = `Nivel ${G.level + 1} · ` + (G.phase === 'sector'
+      ? `Sector ${G.sector + 1}/3 · ${Math.ceil(SECTORS_OF()[G.sector].len - G.st)}s` : `Jefe: ${BOSSES[LEVELS[G.level].boss].name}`);
     const pw = [];
     if (G.power.shield > 0) pw.push('🫧 Burbuja');
     if (G.power.triple > 0) pw.push(`🔱 ${G.power.triple.toFixed(1)}`);
@@ -1028,7 +1300,7 @@
   }
 
   function showOnly(id) {
-    ['menu', 'over', 'shop', 'pause', 'fame', 'bossIntro'].forEach(o => $(o).classList.toggle('show', o === id));
+    ['menu', 'over', 'shop', 'pause', 'fame', 'bossIntro', 'levelUp'].forEach(o => $(o).classList.toggle('show', o === id));
     const inGame = state === 'play' || state === 'pause';
     $('hud').style.display = inGame ? 'flex' : 'none';
     $('superBtn').style.display = inGame ? 'block' : 'none';
@@ -1043,6 +1315,7 @@
     $('mBest').textContent = save.best;
     $('mDust').textContent = save.dust;
     $('mStreak').textContent = save.streak;
+    $('lvl2Btn').hidden = !save.unlocked2;
     $('mMissions').innerHTML = (dailyBonus ? `<div class="row done"><span>🔥 Bono diario (racha ${save.streak})</span><span class="rw">+${dailyBonus} ✦</span></div>` : '') + missionHTML(save.missions);
   }
   function showFame() { state = 'fame'; showOnly('fame'); $('fBoard').innerHTML = boardHTML(-1); }
@@ -1066,10 +1339,11 @@
     });
   }
 
-  function start() {
+  function start(level = 0) {
+    if (typeof level !== 'number') level = 0;
     ensureAudio();
     restartMusic('area');
-    newGame(); state = 'play'; showOnly(null); last = performance.now();
+    newGame(level); state = 'play'; showOnly(null); last = performance.now();
     beep(330, 0.2, 'triangle', 0.06, 330);
   }
 
@@ -1079,8 +1353,9 @@
     if (state === 'over') return;
     state = 'over'; pauseMusic(); track = null;
     const score = Math.floor(G.score);
-    const reached = won ? 'Apolo 🏆' : G.phase === 'boss' ? 'Apolo' : `Sector ${G.sector + 1}`;
-    lastRun = { score, won, reached, saved: false };
+    const bossName = BOSSES[LEVELS[G.level].boss].name;
+    const reached = won ? 'Nyx 🏆' : G.phase === 'boss' ? bossName : `${G.level ? 'N2 · ' : ''}Sector ${G.sector + 1}`;
+    lastRun = { score, won, reached, apolo: G.apoloDown, saved: false };
     $('cardBox').hidden = true;
     if (score > save.best) save.best = score;
     if (won) save.wins++;
@@ -1088,7 +1363,7 @@
     save.dust += earned; save.games++;
 
     const prog = { dust: G.dust, combo: G.maxCombo, meteors: G.meteors, near: G.near, score, howls: G.howls,
-      sector: G.phase === 'sector' ? G.sector + 1 : 4 };
+      sector: G.level > 0 ? 5 : G.phase === 'sector' ? G.sector + 1 : 4 };
     let bonus = 0;
     const shown = save.missions.map(m => {
       if (prog[m.k] >= m.n) { bonus += m.reward; save.missionLevel++; return Object.assign({}, m, { done: true }); }
@@ -1100,8 +1375,9 @@
     save.missions = keep;
     persist();
 
-    $('oTitle').innerHTML = won ? '<span class="win">¡Gaia derrotó a Apolo! 🏆</span>' : 'Gaia fue alcanzada';
-    $('oSub').textContent = won ? '¡Pasaste el juego! El espacio está a salvo.' : `${Math.floor(G.t)}s de viaje · ${G.meteors} meteoritos rotos · ${G.near} roces`;
+    $('oTitle').innerHTML = won ? '<span class="win">¡Gaia derrotó a Nyx! 🏆</span>' : 'Gaia fue alcanzada';
+    $('oSub').textContent = won ? '¡Pasaste los 2 niveles! Apolo y Nyx fueron derrotados.'
+      : `${G.apoloDown ? '🏆 Venciste a Apolo · ' : ''}${Math.floor(G.t)}s de viaje · ${G.meteors} obstáculos rotos · ${G.near} roces`;
     $('oScore').textContent = score;
     $('oSector').textContent = reached;
     $('oDust').textContent = '+' + (earned + bonus);
@@ -1156,9 +1432,9 @@
     x.fillStyle = '#ffcf6b'; x.font = '900 130px Raleway, sans-serif';
     x.fillText(String(lastRun.score), 540, 900);
     x.fillStyle = '#f4f6ff'; x.font = '700 40px Raleway, sans-serif';
-    x.fillText(lastRun.won ? '🏆 ¡Derroté a Apolo!' : `Llegué a: ${lastRun.reached}`, 540, 970);
+    x.fillText(lastRun.won ? '🏆 ¡Derroté a Apolo y a Nyx!' : lastRun.apolo ? `🏆 Vencí a Apolo · llegué a ${lastRun.reached}` : `Llegué a: ${lastRun.reached}`, 540, 970);
     x.fillStyle = '#9aa3c7'; x.font = '400 28px Raleway, sans-serif';
-    x.fillText('Gaia vs Apolo · ¿Me superas?', 540, 1030);
+    x.fillText('Gaia vs Apolo y Nyx · ¿Me superas?', 540, 1030);
     return c;
   }
   function cardBlob() {
@@ -1182,7 +1458,7 @@
   async function share() {
     if (!lastRun) return;
     const text = lastRun.won
-      ? `🐶🚀 ¡Derroté a Apolo en Outs of Space con ${lastRun.score} puntos! ¿Me superas?`
+      ? `🐶🚀 ¡Derroté a Apolo y a Nyx en Outs of Space con ${lastRun.score} puntos! ¿Me superas?`
       : `🐶🚀 Saqué ${lastRun.score} puntos en Outs of Space (llegué a ${lastRun.reached}). ¿Me superas?`;
     const url = location.href.split('#')[0];
     try {
@@ -1207,8 +1483,8 @@
     keys[k] = true;
     if (k.startsWith('Arrow') || k === ' ') e.preventDefault();
     if (k === 'p' || k === 'Escape') togglePause();
-    if (k === ' ' || k === 'e') { if (state === 'play') howl(); else if (state === 'cutscene') startBoss(); }
-    if (k === 'Enter') { if (state === 'menu') start(); else if (state === 'cutscene') startBoss(); }
+    if (k === ' ' || k === 'e') { if (state === 'play') howl(); else if (state === 'cutscene') continueCutscene(); }
+    if (k === 'Enter') { if (state === 'menu') start(); else if (state === 'cutscene') continueCutscene(); }
   });
   window.addEventListener('keyup', e => { keys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
   const setPointer = e => { pointer.x = e.clientX; pointer.y = e.clientY; };
@@ -1231,6 +1507,8 @@
   $('againBtn').onclick = start;
   $('shopPlay').onclick = start;
   $('fightBtn').onclick = startBoss;
+  $('lvl2Go').onclick = startLevel2;
+  $('lvl2Btn').onclick = () => start(1);
   $('shopBtn').onclick = () => showShop('menu');
   $('overShopBtn').onclick = () => showShop('over');
   $('shopBack').onclick = () => shopReturn === 'over' ? (state = 'over', showOnly('over')) : showMenu();
