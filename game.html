@@ -284,7 +284,7 @@
     <div class="card">
       <h2>🏆 Salón de la Fama</h2>
       <div class="list" id="fBoard"></div>
-      <p class="hint">Las puntuaciones se guardan en este dispositivo. Descarga tu imagen al terminar para postearla.</p>
+      <p class="hint" id="fHint"></p>
       <button class="ghost" id="fameBack">Volver</button>
     </div>
   </div>
@@ -1591,6 +1591,38 @@
         <span class="rw">+${m.reward} ✦</span></div>`).join('');
   }
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // ---------- Ranking mundial (servidor /api/scores en outs-of-space.pages.dev) ----------
+  const API = '/api/scores';
+  const ONLINE = /^https?:$/.test(location.protocol);
+  async function fetchGlobal() {
+    if (!ONLINE) return null;
+    try {
+      const r = await fetch(API, { cache: 'no-store' });
+      if (!r.ok) return null;
+      const j = await r.json();
+      return Array.isArray(j.scores) ? j.scores : null;
+    } catch (e) { return null; }
+  }
+  async function postGlobal(entry) {
+    if (!ONLINE) return null;
+    try {
+      const r = await fetch(API, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(entry) });
+      const j = await r.json().catch(() => ({}));
+      return r.ok ? j : { error: j.error || 'No se pudo guardar en el ranking mundial' };
+    } catch (e) { return null; }
+  }
+  function globalHTML(list, highlightId) {
+    if (!list.length) return '<div class="hint">Todavía no hay récords en el ranking mundial. ¡Sé la primera persona!</div>';
+    return list.map((r, i) => `<div class="row ${r.id === highlightId ? 'me' : ''}">
+      <span>${['🥇', '🥈', '🥉'][i] || (i + 1) + '.'} ${esc(r.name)} ${r.won ? '🏆' : ''}</span><span class="rw">${r.score}</span></div>`).join('');
+  }
+  // Muestra el ranking mundial si está disponible; si no, el de este aparato
+  async function renderBoard(el, highlightId = null, extra = '') {
+    const list = await fetchGlobal();
+    if (list) el.innerHTML = '<div class="label">🌍 Ranking mundial</div>' + globalHTML(list, highlightId) + extra;
+    return !!list;
+  }
+
   function boardHTML(highlight) {
     if (!save.board.length) return '<div class="hint">Todavía no hay récords. ¡Sé la primera persona!</div>';
     return save.board.map((r, i) => `<div class="row ${i === highlight ? 'me' : ''}">
@@ -1617,7 +1649,14 @@
     $('lvl3Btn').hidden = !save.unlocked3;
     $('mMissions').innerHTML = (dailyBonus ? `<div class="row done"><span>🔥 Bono diario (racha ${save.streak})</span><span class="rw">+${dailyBonus} ✦</span></div>` : '') + missionHTML(save.missions);
   }
-  function showFame() { state = 'fame'; showOnly('fame'); $('fBoard').innerHTML = boardHTML(-1); }
+  function showFame() {
+    state = 'fame'; showOnly('fame');
+    $('fBoard').innerHTML = '<div class="label">📱 En este aparato</div>' + boardHTML(-1);
+    $('fHint').textContent = ONLINE ? 'Cargando el ranking mundial…' : 'Las puntuaciones se guardan en este aparato.';
+    renderBoard($('fBoard')).then(ok => {
+      $('fHint').textContent = ok ? 'Ranking de todas las personas que juegan en Outs of Space.' : 'Las puntuaciones se guardan en este aparato.';
+    });
+  }
 
   let shopReturn = 'menu';
   function showShop(from) {
@@ -1680,13 +1719,17 @@
     $('oScore').textContent = score;
     $('oSector').textContent = reached;
     $('oDust').textContent = '+' + (earned + bonus);
-    const qualifies = score > 0 && (save.board.length < 10 || score > save.board[save.board.length - 1].s);
+    const qualifies = score > 0 && (ONLINE || save.board.length < 10 || score > save.board[save.board.length - 1].s);
     $('saveBox').style.display = qualifies ? 'block' : 'none';
     $('saveBtn').disabled = false;
     $('nameInput').value = save.lastName || '';
-    $('saveMsg').textContent = won ? '¡Pasaste el juego! Anota tu nombre en el Salón de la Fama:' : '¡Entraste al top 10! Anota tu nombre:';
-    $('oBoard').innerHTML = '<div class="label">🏆 Salón de la Fama</div>' + boardHTML(-1) +
+    $('saveMsg').textContent = won ? '¡Pasaste el juego! Anota tu nombre en el ranking:' : 'Anota tu nombre en el ranking:';
+    $('oBoard').innerHTML = '<div class="label">📱 En este aparato</div>' + boardHTML(-1) +
       (!qualifies && save.board.length ? `<div class="hint">Necesitas más de ${save.board[save.board.length - 1].s} puntos para entrar al top 10.</div>` : '');
+    const run = lastRun;
+    fetchGlobal().then(list => { // no pisar el ranking ya actualizado si la persona guardó rápido
+      if (list && lastRun === run && !run.saved) $('oBoard').innerHTML = '<div class="label">🌍 Ranking mundial</div>' + globalHTML(list, null);
+    });
     $('oMissions').innerHTML = missionHTML(shown, prog);
     const affordable = UPGRADES.some(u => save.up[u.id] < u.max && save.dust >= cost(u));
     $('overShopBtn').textContent = affordable ? 'Mejoras ●' : 'Mejoras';
@@ -1705,9 +1748,20 @@
     lastRun.saved = true; lastRun.name = name;
     const rank = save.board.indexOf(entry);
     $('saveBtn').disabled = true;
-    $('saveMsg').textContent = rank >= 0 ? `¡Guardado! Puesto #${rank + 1} 🎉` : '¡Guardado!';
-    $('oBoard').innerHTML = '<div class="label">🏆 Salón de la Fama</div>' + boardHTML(rank);
+    $('saveMsg').textContent = rank >= 0 ? `¡Guardado! Puesto #${rank + 1} en este aparato 🎉` : '¡Guardado!';
+    $('oBoard').innerHTML = '<div class="label">📱 En este aparato</div>' + boardHTML(rank);
     beep(660, 0.3, 'triangle', 0.08, 600);
+    if (ONLINE) {
+      $('saveMsg').textContent = 'Guardando en el ranking mundial…';
+      postGlobal({ name, score: lastRun.score, won: lastRun.won, reached: lastRun.reached }).then(res => {
+        if (res && res.scores) {
+          $('saveMsg').textContent = `🌍 ¡Puesto #${res.rank} en el ranking mundial! 🎉`;
+          $('oBoard').innerHTML = '<div class="label">🌍 Ranking mundial</div>' + globalHTML(res.scores, res.id);
+        } else {
+          $('saveMsg').textContent = (res && res.error ? res.error + ' · ' : '') + (rank >= 0 ? `Guardado en este aparato (puesto #${rank + 1})` : 'Guardado en este aparato');
+        }
+      });
+    }
   }
 
   // Imagen para postear en la página de Outs of Space
