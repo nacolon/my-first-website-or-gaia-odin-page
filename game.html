@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Outs of Space: Gaia vs Apolo y Nyx</title>
-  <meta name="description" content="Ayuda a Gaia, la perrita astronauta, a esquivar meteoritos y derrotar a Apolo y a Nyx.">
+  <title>Outs of Space: Gaia vs Apolo, Nyx y Alien Apolo</title>
+  <meta name="description" content="Ayuda a Gaia, la perrita astronauta, a esquivar meteoritos y derrotar a Apolo, a Nyx y a Alien Apolo.">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -136,6 +136,8 @@
     #bossIntro.nyx h2 { color: var(--accent2); }
     #bossIntro.nyx .card { border-color: #a855f766; }
     #levelUp h2 { color: var(--accent2); font-size: 1.5em; margin: 0 0 6px; }
+    #levelUp.alien .card, #bossIntro.alien .card { border-color: #4ade8099; }
+    #levelUp.alien h2, #bossIntro.alien h2, #levelUp.alien .sub { color: #4ade80; }
     .invent { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 10px 0; font-size: .75em; color: var(--muted); }
     .invent div { background: #ffffff0d; border-radius: 10px; padding: 8px 4px; }
     .invent b { display: block; font-size: 1.6em; }
@@ -188,8 +190,8 @@
     <div class="card">
       <img class="logo" src="assets/logo.jpg" alt="Outs of Space">
       <img class="hero" src="assets/gaia-head.png" alt="Gaia">
-      <p class="sub">Gaia vs Apolo y Nyx</p>
-      <p style="margin:0 0 6px">Gaia, la perrita astronauta, viaja por el espacio. Esquiva los meteoritos, rompe todo lo que se cruce y derrota a <b style="color:var(--danger)">Apolo</b> en el agujero negro. Del otro lado te espera <b style="color:var(--accent2)">Nyx</b>…</p>
+      <p class="sub">Gaia vs Apolo, Nyx y Alien Apolo</p>
+      <p style="margin:0 0 6px">Gaia, la perrita astronauta, viaja por el espacio. Esquiva los meteoritos, rompe todo lo que se cruce y derrota a <b style="color:var(--danger)">Apolo</b> en el agujero negro. Del otro lado te espera <b style="color:var(--accent2)">Nyx</b>… y algo <b style="color:#4ade80">verde</b> está despertando ☣️</p>
       <div class="invent">
         <div><b>📣</b>Ladri-Cañón<br>dispara solo</div>
         <div><b>🫧</b>Burbuja de Hueso<br>escudo</div>
@@ -203,6 +205,7 @@
       <div class="list" id="mMissions"></div>
       <button id="playBtn">▶ Jugar</button>
       <button class="ghost" id="lvl2Btn" hidden>🌙 Nivel 2</button>
+      <button class="ghost" id="lvl3Btn" hidden>☣️ Nivel 3</button>
       <button class="ghost" id="shopBtn">Mejoras</button>
       <button class="ghost" id="fameBtn">🏆 Récords</button>
       <div class="vol">
@@ -232,13 +235,13 @@
   <!-- Nivel completado -->
   <div class="overlay" id="levelUp">
     <div class="card">
-      <img src="assets/nyx.jpg" alt="Nyx, la doberman, en su nave negra y morada junto a un púlsar">
+      <img id="luImg" src="assets/nyx.jpg" alt="">
       <div class="txt">
-        <p class="sub" style="margin:0 0 4px">¡NIVEL 1 COMPLETADO! 🏆</p>
-        <h2>Nivel 2: El Reino de Nyx</h2>
-        <p style="margin:0 0 8px">Gaia cruzó el agujero negro… pero del otro lado la espera <b style="color:var(--accent2)">Nyx</b>, la dama de la noche. Ahora hay cristales lunares, rayos de púlsar y minas de sombra que te persiguen.</p>
-        <p class="hint" style="margin:0 0 10px">❤️ Vidas recargadas · todo va más rápido</p>
-        <button class="gold" id="lvl2Go">🚀 Ir al Nivel 2</button>
+        <p class="sub" id="luSub" style="margin:0 0 4px"></p>
+        <h2 id="luTitle"></h2>
+        <p id="luText" style="margin:0 0 8px"></p>
+        <p class="hint" id="luHint" style="margin:0 0 10px"></p>
+        <button class="gold" id="lvlGo"></button>
       </div>
     </div>
   </div>
@@ -322,7 +325,7 @@
 
   // ---------- Imágenes ----------
   const IMG = {};
-  [['logo', 'jpg'], ['gaia-head', 'png'], ['apolo-head', 'png'], ['nyx-head', 'png']].forEach(([n, ext]) => {
+  [['logo', 'jpg'], ['gaia-head', 'png'], ['apolo-head', 'png'], ['nyx-head', 'png'], ['alien-apolo-head', 'png'], ['blob', 'png']].forEach(([n, ext]) => {
     const i = new Image(); i.src = `assets/${n}.${ext}`; IMG[n] = i;
   });
   const ready = i => i && i.complete && i.naturalWidth > 0;
@@ -331,7 +334,7 @@
   const KEY = 'outs-of-space-v1';
   const defaults = {
     musicVol: 45, sfxVol: 80,
-    unlocked2: false,
+    unlocked2: false, unlocked3: false,
     best: 0, dust: 0, games: 0, wins: 0, streak: 0, lastDay: '', muted: false, lastName: '',
     up: { bark: 0, lives: 0, power: 0, howl: 0, magnet: 0 },
     missions: null, missionLevel: 0, board: []
@@ -493,6 +496,22 @@
       { name: 'Tormenta de Púlsares', len: 34 },
       { name: 'Nebulosa de Sombras', len: 36 },
     ] },
+    { boss: 'alien', sectors: [
+      { name: 'Nido del Simbionte', len: 34 },
+      { name: 'Corredor de Tentáculos', len: 36 },
+      { name: 'Lluvia Ácida', len: 38 },
+    ] },
+  ];
+  // Pantalla entre niveles (índice = nivel que se acaba de completar)
+  const LEVEL_INTROS = [
+    { cls: '', img: 'assets/nyx.jpg', alt: 'Nyx, la doberman, en su nave negra y morada junto a un púlsar',
+      sub: '¡NIVEL 1 COMPLETADO! 🏆', title: 'Nivel 2: El Reino de Nyx',
+      text: 'Gaia cruzó el agujero negro… pero del otro lado la espera <b style="color:var(--accent2)">Nyx</b>, la dama de la noche. Ahora hay cristales lunares, rayos de púlsar y minas de sombra que te persiguen.',
+      hint: '❤️ Vidas recargadas · todo va más rápido', btn: '🚀 Ir al Nivel 2' },
+    { cls: 'alien', img: 'assets/alien-apolo.jpg', alt: 'Apolo atrapado por un simbionte alienígena verde',
+      sub: '¡NIVEL 2 COMPLETADO! 🏆', title: 'Nivel 3: La Infección',
+      text: 'Mientras Gaia vencía a Nyx, algo salió de los restos de la nave de Apolo: un <b style="color:#4ade80">simbionte alienígena</b>. Se le pegó como una segunda piel y lo hizo más fuerte que nunca. Ahora es <b style="color:#4ade80">ALIEN APOLO</b>, y está infectando todo el espacio.',
+      hint: '❤️ Vidas recargadas · ☣️ el nivel más difícil: baba que se divide, muros de tentáculos y lluvia ácida', btn: '☣️ Ir al Nivel 3' },
   ];
   const BOSSES = {
     apolo: { name: 'Apolo', img: 'assets/apolo.jpg', max: 150, hw: 95, hh: 55,
@@ -501,6 +520,9 @@
     nyx: { name: 'Nyx', img: 'assets/nyx.jpg', max: 230, hw: 115, hh: 42,
       quote: '«Apolo era solo un cachorro. Yo soy la noche misma, Gaia.»',
       powers: '🌙 Lunas boomerang · ⚡ Rayos de púlsar · 🌑 Se vuelve sombra y se teletransporta' },
+    alien: { name: 'Alien Apolo', img: 'assets/alien-apolo-nave.jpg', max: 320, hw: 100, hh: 58,
+      quote: '«Gracias por destruir mi nave, Gaia. Ahora el simbionte y yo somos uno… y somos INVENCIBLES.»',
+      powers: '🟢 Escupitajos ácidos · 🐙 Látigos de tentáculo · 💥 Embestida · 💚 Se cura si dejas de dispararle · baba que tapa la pantalla' },
   };
   const SECTORS_OF = () => LEVELS[G.level].sectors;
   const ITEMS = { shield: '🫧', triple: '🔱', magnet: '🧲', bone: '❤️' };
@@ -524,24 +546,24 @@
       spawn: 0, fire: 0, howl: 0,
       power: { shield: 0, triple: 0, magnet: 0 },
       phase: 'sector', level, sector: 0, st: 0, banner: null, boss: null,
-      beams: [], beamT: 3, apoloDown: level > 0,
+      beams: [], beamT: 3, walls: [], wallT: 3, splats: [], beaten: [],
     };
-    setBanner(level ? 'Nivel 2 · Sector 1' : 'Sector 1', SECTORS_OF()[0].name);
+    setBanner(level ? `Nivel ${level + 1} · Sector 1` : 'Sector 1', SECTORS_OF()[0].name);
     pointer.active = false;
   }
 
   function setBanner(title, sub) { G.banner = { title, sub, life: 2.4 }; }
   const difficulty = () => G.phase === 'boss' ? 1.8 + G.level * 0.5 : 1 + G.level * 0.9 + G.sector * 0.55 + G.st / 70;
-  const hostile = e => e.type === 'meteor' || e.type === 'junk' || e.type === 'mine';
+  const hostile = e => e.type === 'meteor' || e.type === 'junk' || e.type === 'mine' || e.type === 'blob';
   const mult = () => 1 + Math.floor(G.combo / 10);
 
   // --- Generación ---
   function spawnMeteor(big) {
     const d = difficulty();
     const r = big ? rand(26, 34) : rand(12, 18);
-    const fromSide = (G.sector >= 1 || G.level > 0) && Math.random() < 0.25;
+    const fromSide = (G.sector >= 1 || G.level > 0) && Math.random() < 0.25 + G.level * 0.05;
     const e = {
-      type: 'meteor', kind: G.level ? 'crystal' : 'rock', r, hp: big ? 3 : 1, big,
+      type: 'meteor', kind: ['rock', 'crystal', 'toxic'][G.level], r, hp: big ? 3 : 1, big,
       x: fromSide ? (Math.random() < 0.5 ? -r : W + r) : rand(r, W - r), y: fromSide ? rand(-40, H * 0.3) : -r - 10,
       vy: rand(120, 180) * (0.7 + d * 0.3), vx: 0, near: false, rot: Math.random() * 6, vr: rand(-2, 2),
       shape: Array.from({ length: 9 }, () => rand(0.75, 1.15)),
@@ -553,15 +575,35 @@
     for (let i = 0; i < n; i++) G.ents.push({ type: 'dust', r: 7, x: x + rand(-spread, spread), y: y - i * (spread ? 0 : 24), vx: rand(-15, 15), vy: rand(110, 150) });
   }
   function spawnMine(x, y) {
-    G.ents.push({ type: 'mine', r: 13, hp: 2, x, y, vx: 0, vy: rand(80, 120), rot: 0, vr: 2 });
+    G.ents.push({ type: 'mine', spore: G.level === 2, r: 13, hp: 2, x, y, vx: 0, vy: rand(80, 120), rot: 0, vr: 2 });
   }
-  function addBeam(vertical, pos, warn = 1.0) {
-    G.beams.push({ v: vertical, pos, warn, on: 0.45, w: 30 });
-    beep(1400, 0.2, 'sine', 0.03, 400);
+  // Baba alienígena: al romperla se divide en 2 más pequeñas
+  function spawnBlob(x, y, tier) {
+    G.ents.push({ type: 'blob', tier, r: [0, 13, 21, 31][tier], hp: [0, 1, 2, 4][tier], x, y,
+      vx: rand(-30, 30), vy: rand(85, 125), ph: Math.random() * 6, rot: rand(-0.3, 0.3), vr: rand(-0.6, 0.6) });
+  }
+  function spawnWall() { // muro de tentáculos con un hueco para pasar
+    const gw = Math.max(115, Math.min(170, W * 0.36));
+    G.walls.push({ y: -30, gx: rand(gw / 2 + 10, W - gw / 2 - 10), gw, passed: false, ph: Math.random() * 6 });
+    beep(160, 0.3, 'sawtooth', 0.04, 60);
+  }
+  function addBeam(vertical, pos, warn = 1.0, col = 'pulsar') {
+    G.beams.push({ v: vertical, pos, warn, on: 0.45, w: col === 'acid' ? 24 : 30, col });
+    beep(col === 'pulsar' ? 1400 : 300, 0.2, 'sine', 0.03, 400);
   }
   function spawn() {
     const d = difficulty(), r = Math.random();
-    if (G.level > 0) { // Nivel 2: cristales, minas de sombra
+    if (G.level === 2) { // Nivel 3: baba, esporas y cristales tóxicos
+      const sporeP = 0.04 + G.sector * 0.03 + (G.phase === 'boss' ? 0.03 : 0);
+      const blobP = 0.16 + G.sector * 0.03;
+      if (r < 0.05) G.ents.push({ type: 'junk', r: 20, hp: 3, x: rand(30, W - 30), y: -30, vx: rand(-20, 20), vy: 95, rot: 0, vr: rand(-1, 1) });
+      else if (r < 0.05 + sporeP) spawnMine(rand(30, W - 30), -20);
+      else if (r < 0.05 + sporeP + blobP) spawnBlob(rand(40, W - 40), -40, Math.random() < 0.35 ? 3 : 2);
+      else if (r < 0.05 + sporeP + blobP + Math.min(0.45, 0.2 + d * 0.05)) spawnMeteor(Math.random() < 0.25);
+      else spawnDust(rand(20, W - 20), -10, Math.random() < 0.2 ? 5 : 1);
+      return;
+    }
+    if (G.level === 1) { // Nivel 2: cristales, minas de sombra
       const mineP = 0.05 + G.sector * 0.05 + (G.phase === 'boss' ? 0.04 : 0);
       if (r < 0.06) G.ents.push({ type: 'junk', r: 20, hp: 3, x: rand(30, W - 30), y: -30, vx: rand(-20, 20), vy: 95, rot: 0, vr: rand(-1, 1) });
       else if (r < 0.06 + mineP) spawnMine(rand(30, W - 30), -20);
@@ -604,7 +646,7 @@
   function destroyMeteor(e) {
     G.meteors++; addCombo(); chargeHowl(e.big ? 10 : 4);
     const pts = (e.big ? 60 : 25) * mult(); G.score += pts;
-    const crystal = e.kind === 'crystal', col = crystal ? '#c084fc' : '#ff9a3c';
+    const crystal = e.kind !== 'rock', col = e.kind === 'toxic' ? '#4ade80' : crystal ? '#c084fc' : '#ff9a3c';
     burst(e.x, e.y, col, e.big ? 24 : 12, e.big ? 220 : 150);
     floatText(e.x, e.y, `+${pts}`, col, 13);
     if (crystal) beep(e.big ? 900 : 1300, 0.12, 'triangle', 0.04, 300);
@@ -623,8 +665,19 @@
     G.score += 35 * mult(); addCombo(); chargeHowl(5);
     burst(e.x, e.y, '#a855f7', 20, 200); beep(90, 0.2, 'sawtooth', 0.05, -40);
   }
+  function destroyBlob(e) {
+    G.meteors++; addCombo(); chargeHowl(3 * e.tier);
+    const pts = 30 * e.tier * mult(); G.score += pts;
+    burst(e.x, e.y, '#4ade80', 10 + e.tier * 6, 160); floatText(e.x, e.y, `+${pts}`, '#4ade80', 13);
+    beep(220 - e.tier * 40, 0.15, 'sine', 0.06, -120);
+    if (e.tier > 1) for (const sgn of [-1, 1]) {
+      spawnBlob(e.x + sgn * 8, e.y, e.tier - 1);
+      const c = G.ents[G.ents.length - 1]; c.vx = sgn * rand(80, 130); c.vy = rand(70, 110);
+    }
+  }
   function destroyEnt(e) {
-    if (e.type === 'meteor') destroyMeteor(e);
+    if (e.type === 'blob') destroyBlob(e);
+    else if (e.type === 'meteor') destroyMeteor(e);
     else if (e.type === 'junk') destroyJunk(e);
     else if (e.type === 'mine') destroyMine(e);
   }
@@ -638,30 +691,29 @@
 
   function damageBoss(n) {
     const b = G.boss; if (!b || b.hp <= 0 || b.vanish > 0) return;
-    b.hp -= n; b.flash = 0.08; G.score += 10 * n;
-    const nyx = b.kind === 'nyx';
-    if (b.hp <= b.max * (nyx ? 0.6 : 0.5) && b.stage < 2) {
-      b.stage = 2; beep(90, 0.5, 'sawtooth', 0.08, -40);
-      nyx ? setBanner('¡Nyx invoca los púlsares!', 'Mira la línea de aviso y apártate') : setBanner('¡Apolo se enfurece!', 'Disparos triples');
-    }
-    if (b.hp <= b.max * (nyx ? 0.25 : 0.2) && b.stage < 3) {
-      b.stage = 3; beep(80, 0.5, 'sawtooth', 0.08, -40);
-      nyx ? setBanner('¡Nyx se vuelve sombra!', 'Se teletransporta y suelta minas') : setBanner('¡Último esfuerzo!', 'Apolo lo da todo');
-    }
+    b.hp -= n; b.flash = 0.08; b.lastHit = b.t; G.score += 10 * n;
+    const nyx = b.kind === 'nyx', alien = b.kind === 'alien';
+    const MSG = {
+      apolo: [0.5, 0.2, ['¡Apolo se enfurece!', 'Disparos triples'], ['¡Último esfuerzo!', 'Apolo lo da todo']],
+      nyx: [0.6, 0.25, ['¡Nyx invoca los púlsares!', 'Mira la línea de aviso y apártate'], ['¡Nyx se vuelve sombra!', 'Se teletransporta y suelta minas']],
+      alien: [0.65, 0.3, ['¡Tentáculos!', 'Látigos de baba y anillos de ácido'], ['¡Simbiosis total!', 'Embiste, se cura y te tapa la pantalla']],
+    }[b.kind];
+    if (b.hp <= b.max * MSG[0] && b.stage < 2) { b.stage = 2; beep(90, 0.5, 'sawtooth', 0.08, -40); setBanner(...MSG[2]); }
+    if (b.hp <= b.max * MSG[1] && b.stage < 3) { b.stage = 3; beep(80, 0.5, 'sawtooth', 0.08, -40); setBanner(...MSG[3]); }
     if (b.hp <= 0) {
       b.hp = 0; G.phase = 'won'; G.shake = 20;
-      const bonus = nyx ? 10000 + G.lives * 800 : 5000 + G.lives * 500;
+      const bonus = alien ? 20000 + G.lives * 1000 : nyx ? 10000 + G.lives * 800 : 5000 + G.lives * 500;
       G.score += bonus;
-      const cols = nyx ? ['#a855f7', '#e9d5ff'] : ['#ff4d5e', '#ffcf6b'];
+      const cols = alien ? ['#4ade80', '#bbf7d0'] : nyx ? ['#a855f7', '#e9d5ff'] : ['#ff4d5e', '#ffcf6b'];
       for (let i = 0; i < 6; i++) setTimeout(() => { if (G) { burst(b.x + rand(-80, 80), b.y + rand(-40, 40), cols[i % 2], 30, 300); beep(70 + i * 20, 0.3, 'sawtooth', 0.08, -30); } }, i * 180);
       floatText(W / 2, H / 2, `¡${BOSSES[b.kind].name.toUpperCase()} DERROTAD${nyx ? 'A' : 'O'}! +${bonus}`, '#ffcf6b', 24);
       G.ents.forEach(e => { if (hostile(e)) burst(e.x, e.y, '#ff9a3c', 8); });
-      G.ents = G.ents.filter(e => !hostile(e)); G.enemyShots = []; G.beams = [];
-      if (!nyx) G.apoloDown = true;
-      const g = G;
+      G.ents = G.ents.filter(e => !hostile(e)); G.enemyShots = []; G.beams = []; G.walls = []; G.splats = [];
+      G.beaten.push(BOSSES[b.kind].name);
+      const g = G, final = G.level === LEVELS.length - 1;
       setTimeout(() => {
         if (G !== g || (state !== 'play' && state !== 'pause')) return;
-        nyx ? endGame(true) : showLevelUp();
+        final ? endGame(true) : showLevelUp();
       }, 2600);
     }
   }
@@ -677,13 +729,14 @@
   function nextSector() {
     G.score += 500; floatText(W / 2, H * 0.45, '+500 sector superado', '#8cc8ff', 18);
     G.sector++; G.st = 0;
-    if (G.sector < SECTORS_OF().length) { setBanner(`${G.level ? 'Nivel 2 · ' : ''}Sector ${G.sector + 1}`, SECTORS_OF()[G.sector].name); beep(520, 0.3, 'triangle', 0.06, 300); }
+    if (G.sector < SECTORS_OF().length) { setBanner(`${G.level ? `Nivel ${G.level + 1} · ` : ''}Sector ${G.sector + 1}`, SECTORS_OF()[G.sector].name); beep(520, 0.3, 'triangle', 0.06, 300); }
     else {
       const kind = LEVELS[G.level].boss, B = BOSSES[kind];
       $('bossImg').src = B.img; $('bossTitle').textContent = `¡${B.name.toUpperCase()}!`;
       $('bossQuote').textContent = B.quote; $('bossPowers').textContent = 'Poderes: ' + B.powers;
       $('bossIntro').classList.toggle('nyx', kind === 'nyx');
-      G.beams = [];
+      $('bossIntro').classList.toggle('alien', kind === 'alien');
+      G.beams = []; G.walls = [];
       G.phase = 'intro'; state = 'cutscene'; showOnly('bossIntro'); pauseMusic();
       beep(70, 0.8, 'sawtooth', 0.09, -20);
     }
@@ -696,25 +749,32 @@
     const kind = LEVELS[G.level].boss, B = BOSSES[kind];
     const sc = Math.min(1, W / 470); // naves más pequeñas en teléfonos
     G.boss = { kind, sc, x: W / 2, y: -100, hp: B.max, max: B.max, hw: B.hw * sc, hh: B.hh * sc, t: 0, shotT: 1.5, beamT: 2.5, tpT: 3,
-      vanish: 0, stage: 1, flash: 0, tx: W / 2, ty: 130, wanderT: 0 };
+      vanish: 0, stage: 1, flash: 0, tx: W / 2, ty: 130, wanderT: 0,
+      blobT: 3, ringT: 3, whipT: 3, dashT: 4, splatT: 5, dash: null, lastHit: 0 };
     $('bossName').textContent = B.name.toUpperCase();
-    setBanner(B.name, kind === 'nyx' ? 'La dama de la noche' : 'El agujero negro');
+    setBanner(B.name, { apolo: 'El agujero negro', nyx: 'La dama de la noche', alien: 'El simbionte' }[kind]);
     last = performance.now();
   }
   function showLevelUp() {
+    const L = LEVEL_INTROS[G.level];
+    $('luImg').src = L.img; $('luImg').alt = L.alt; $('luSub').textContent = L.sub; $('luTitle').textContent = L.title;
+    $('luText').innerHTML = L.text; $('luHint').textContent = L.hint; $('lvlGo').textContent = L.btn;
+    $('levelUp').className = 'overlay ' + L.cls;
     state = 'cutscene'; G.phase = 'levelup'; showOnly('levelUp'); pauseMusic();
-    save.unlocked2 = true; persist();
+    save['unlocked' + (G.level + 2)] = true; persist();
   }
-  function startLevel2() {
+  function startNextLevel() {
     if (state !== 'cutscene' || G.phase !== 'levelup') return;
-    Object.assign(G, { level: 1, sector: 0, st: 0, phase: 'sector', boss: null, ents: [], enemyShots: [], beams: [], beamT: 4, lives: G.maxLives, inv: 1.5 });
+    const level = G.level + 1;
+    Object.assign(G, { level, sector: 0, st: 0, phase: 'sector', boss: null, ents: [], enemyShots: [], beams: [], beamT: 4,
+      walls: [], wallT: 3, splats: [], lives: G.maxLives, inv: 1.5 });
     state = 'play'; showOnly(null);
     restartMusic('area');
-    setBanner('Nivel 2 · Sector 1', SECTORS_OF()[0].name);
+    setBanner(`Nivel ${level + 1} · Sector 1`, SECTORS_OF()[0].name);
     floatText(G.p.x, G.p.y - 50, '❤️ Vidas recargadas', '#4ade80', 18);
     last = performance.now();
   }
-  function continueCutscene() { if (G && G.phase === 'levelup') startLevel2(); else startBoss(); }
+  function continueCutscene() { if (G && G.phase === 'levelup') startNextLevel(); else startBoss(); }
 
   // --- Actualización ---
   function update(dt) {
@@ -749,12 +809,24 @@
       G.st += dt;
       if (G.st >= SECTORS_OF()[G.sector].len) { nextSector(); if (state !== 'play') return; }
       // Nivel 2: rayos de púlsar desde el sector 2
-      if (G.level > 0 && G.sector >= 1 && G.phase === 'sector') {
+      if (G.level === 1 && G.sector >= 1 && G.phase === 'sector') {
         G.beamT -= dt;
         if (G.beamT <= 0) {
           const v = Math.random() < 0.6;
           addBeam(v, v ? rand(30, W - 30) : rand(140, H - 60));
           G.beamT = G.sector === 1 ? rand(1.8, 2.8) : rand(2.4, 3.4);
+        }
+      }
+      // Nivel 3: muros de tentáculos (sector 2 y 3) y lluvia ácida (sector 3)
+      if (G.level === 2 && G.phase === 'sector') {
+        if (G.sector >= 1) { G.wallT -= dt; if (G.wallT <= 0) { spawnWall(); G.wallT = G.sector === 1 ? rand(2.4, 3.2) : rand(3.4, 4.4); } }
+        if (G.sector === 2) {
+          G.beamT -= dt;
+          if (G.beamT <= 0) {
+            const n = Math.random() < 0.5 ? 3 : 2;
+            for (let k = 0; k < n; k++) addBeam(true, rand(30, W - 30), 1.0, 'acid');
+            G.beamT = rand(2.2, 3.0);
+          }
         }
       }
     }
@@ -828,6 +900,7 @@
         const a = Math.atan2(p.y - e.y, p.x - e.x);
         e.x += Math.cos(a) * 440 * dt; e.y += Math.sin(a) * 440 * dt;
       } else {
+        if (e.type === 'blob') e.x += Math.sin(G.t * 3 + e.ph) * 50 * dt;
         if (e.type === 'mine') { // las minas de sombra persiguen a Gaia
           e.vx += Math.sign(p.x - e.x) * 140 * dt; e.vx = Math.max(-110, Math.min(110, e.vx));
         }
@@ -840,7 +913,7 @@
       if (dist < e.r + p.r - (hostile(e) ? 6 : -6)) {
         if (hostile(e)) {
           if (G.inv > 0) continue;
-          G.ents.splice(i, 1); burst(e.x, e.y, e.type === 'mine' || e.kind === 'crystal' ? '#a855f7' : '#ff9a3c', 12); hitPlayer();
+          G.ents.splice(i, 1); burst(e.x, e.y, e.type === 'blob' || e.spore || e.kind === 'toxic' ? '#4ade80' : e.type === 'mine' || e.kind === 'crystal' ? '#a855f7' : '#ff9a3c', 12); hitPlayer();
           if (state !== 'play') return;
           continue;
         }
@@ -884,8 +957,23 @@
       if (bm.on <= 0) G.beams.splice(i, 1);
     }
 
+    // Muros de tentáculos: solo se pasa por el hueco
+    for (let i = G.walls.length - 1; i >= 0; i--) {
+      const w = G.walls[i]; w.y += (130 + G.sector * 15) * dt;
+      if (Math.abs(p.y - w.y) < 14 + p.r * 0.7 && (p.x < w.gx - w.gw / 2 + p.r * 0.6 || p.x > w.gx + w.gw / 2 - p.r * 0.6)) {
+        hitPlayer(); if (state !== 'play') return;
+      }
+      if (!w.passed && w.y > p.y + 30) {
+        w.passed = true; addCombo(); const bonus = 80 * mult(); G.score += bonus;
+        floatText(p.x, p.y - 40, `¡Pasaste! +${bonus}`, '#4ade80', 15); beep(760, 0.1, 'triangle', 0.05, 200);
+      }
+      if (w.y > H + 40) G.walls.splice(i, 1);
+    }
+    for (let i = G.splats.length - 1; i >= 0; i--) { G.splats[i].life -= dt; if (G.splats[i].life <= 0) G.splats.splice(i, 1); }
+
     const b = G.boss;
     if (b && b.hp > 0 && b.kind === 'nyx') { updateNyx(b, p, dt); if (state !== 'play') return; }
+    else if (b && b.hp > 0 && b.kind === 'alien') { updateAlien(b, p, dt); if (state !== 'play') return; }
     else if (b && b.hp > 0) { // Apolo
       b.t += dt; b.flash = Math.max(0, b.flash - dt);
       const speed = 0.7 + b.stage * 0.2;
@@ -963,6 +1051,62 @@
     if (((p.x - b.x) / b.hw) ** 2 + ((p.y - b.y) / b.hh) ** 2 < 1) hitPlayer();
   }
 
+  // Alien Apolo: ácido, tentáculos, embestida, regeneración y baba en la pantalla
+  function updateAlien(b, p, dt) {
+    b.t += dt; b.flash = Math.max(0, b.flash - dt);
+    const lo = Math.min(110 * b.sc, W / 2), hi = Math.max(W / 2, W - 110 * b.sc);
+    if (b.stage === 3 && b.t - b.lastHit > 1.5 && b.hp < b.max * 0.3) b.hp = Math.min(b.max * 0.3, b.hp + 4 * dt); // se cura
+    if (b.dash) {
+      const d = b.dash; d.t += dt;
+      if (d.phase === 'warn') { if (d.t > 0.7) { d.phase = 'go'; d.t = 0; beep(70, 0.4, 'sawtooth', 0.09, 60); } }
+      else if (d.phase === 'go') { b.x += (d.tx - b.x) * Math.min(1, dt * 6); b.y += (d.ty - b.y) * Math.min(1, dt * 6); if (d.t > 0.6) { d.phase = 'back'; d.t = 0; } }
+      else { b.y += (130 - b.y) * Math.min(1, dt * 3); if (d.t > 0.9) b.dash = null; }
+    } else {
+      b.wanderT -= dt;
+      if (b.wanderT <= 0) { b.tx = rand(lo, hi); b.ty = rand(100, 170); b.wanderT = rand(1.1, 2) - b.stage * 0.15; }
+      b.x += (b.tx - b.x) * Math.min(1, dt * 2.6); b.y += (b.ty - b.y) * Math.min(1, dt * 2.2);
+    }
+    const acid = (x, y, a, v) => G.enemyShots.push({ acid: true, x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 9 });
+    // 🟢 escupitajos ácidos
+    b.shotT -= dt;
+    if (b.shotT <= 0 && !b.dash) {
+      const a = Math.atan2(p.y - b.y, p.x - b.x), n = b.stage === 3 ? 5 : 3;
+      for (let k = 0; k < n; k++) acid(b.x, b.y + 40 * b.sc, a + (k - (n - 1) / 2) * 0.24, 300 + b.stage * 30);
+      b.shotT = [1.1, 1.0, 0.85][b.stage - 1];
+      beep(180, 0.15, 'sine', 0.06, -100);
+    }
+    // suelta baba que se divide
+    b.blobT -= dt;
+    if (b.blobT <= 0) { spawnBlob(b.x, b.y + 50 * b.sc, 2); b.blobT = b.stage === 1 ? 4 : 5; }
+    if (b.stage >= 2) {
+      // anillo de ácido
+      b.ringT -= dt;
+      if (b.ringT <= 0) { for (let k = 0; k < 12; k++) acid(b.x, b.y, k / 12 * Math.PI * 2 + b.t, 210); b.ringT = b.stage === 2 ? 3.2 : 2.6; }
+      // 🐙 latigazos de tentáculo
+      b.whipT -= dt;
+      if (b.whipT <= 0) {
+        addBeam(false, p.y, 0.9, 'tentacle');
+        if (b.stage === 3) addBeam(true, p.x, 1.0, 'tentacle');
+        b.whipT = b.stage === 2 ? 3.6 : 3.0;
+      }
+    }
+    if (b.stage === 3) {
+      // 💥 embestida
+      b.dashT -= dt;
+      if (b.dashT <= 0 && !b.dash) {
+        b.dash = { phase: 'warn', t: 0, tx: p.x, ty: Math.min(H - 140, p.y) };
+        b.dashT = rand(5, 6.5); floatText(b.x, b.y + 70, '¡EMBESTIDA!', '#ff4d5e', 20);
+      }
+      // baba que tapa la pantalla
+      b.splatT -= dt;
+      if (b.splatT <= 0) {
+        for (let k = 0; k < 3; k++) G.splats.push({ x: rand(40, W - 40), y: rand(H * 0.25, H * 0.8), r: rand(55, 95), life: 4, seed: Math.random() * 10 });
+        b.splatT = rand(6, 8); beep(120, 0.3, 'sine', 0.08, -60);
+      }
+    }
+    if (((p.x - b.x) / b.hw) ** 2 + ((p.y - b.y) / b.hh) ** 2 < 1) hitPlayer();
+  }
+
   function stepFx(dt) {
     for (let i = G.parts.length - 1; i >= 0; i--) {
       const q = G.parts[i]; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.96; q.vy *= 0.96; q.life -= dt;
@@ -978,11 +1122,21 @@
     const boss = G && (G.phase === 'boss' || G.phase === 'won' || G.phase === 'intro');
     const lvl = G ? G.level : 0;
     const g = ctx.createRadialGradient(W * 0.3, H * 0.2, 0, W * 0.5, H * 0.5, Math.max(W, H));
-    const tints = lvl ? ['#241550', '#0f2a4a', '#2a0f3a'] : ['#16204a', '#2a1650', '#3a1a2a'];
-    const tint = G && !boss ? tints[Math.min(2, G.sector)] : lvl ? '#1c1040' : '#16204a';
-    g.addColorStop(0, tint); g.addColorStop(0.55, lvl ? '#0d0a24' : '#0b0f26'); g.addColorStop(1, '#03040a');
+    const tints = [['#16204a', '#2a1650', '#3a1a2a'], ['#241550', '#0f2a4a', '#2a0f3a'], ['#0f2a1a', '#1a2e0f', '#0a2a22']][lvl];
+    const tint = G && !boss ? tints[Math.min(2, G.sector)] : ['#16204a', '#1c1040', '#0f2a1a'][lvl];
+    g.addColorStop(0, tint); g.addColorStop(0.55, ['#0b0f26', '#0d0a24', '#06140c'][lvl]); g.addColorStop(1, '#03040a');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    if (lvl && G.phase !== 'levelup') { // luna creciente de Nyx
+    if (lvl === 2 && G.phase !== 'levelup') { // nebulosa infectada y baba que gotea
+      const t = G.t, gl = ctx.createRadialGradient(W * 0.3, H * 0.25, 10, W * 0.3, H * 0.25, Math.max(W, H) * (boss ? 0.7 : 0.5));
+      gl.addColorStop(0, `rgba(74,222,128,${boss ? 0.22 + Math.sin(t * 2) * 0.06 : 0.12})`); gl.addColorStop(1, 'rgba(74,222,128,0)');
+      ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#4ade80aa';
+      for (let i = 0; i < 9; i++) {
+        const x = (i + 0.5) * W / 9, len = 12 + (boss ? 30 : 12) * (0.5 + 0.5 * Math.sin(t * 1.3 + i * 1.7));
+        ctx.beginPath(); ctx.ellipse(x, 0, 14, len, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, len + 4, 4, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (lvl === 1 && G.phase !== 'levelup') { // luna creciente de Nyx
       const cx = W * 0.78, cy = H * 0.13, R = Math.min(W, H) * (boss ? 0.2 : 0.11);
       ctx.save(); ctx.shadowColor = '#c084fc'; ctx.shadowBlur = 40;
       ctx.fillStyle = '#e9d5ff'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -1075,24 +1229,70 @@
 
   function drawCrystal(e) {
     ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
-    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 16;
+    const tox = e.kind === 'toxic';
+    ctx.shadowColor = tox ? '#22c55e' : '#a855f7'; ctx.shadowBlur = 16;
     const r = e.r;
-    ctx.fillStyle = e.flash > 0 ? '#fff' : '#6d28d9';
+    ctx.fillStyle = e.flash > 0 ? '#fff' : tox ? '#15803d' : '#6d28d9';
     ctx.beginPath(); ctx.moveTo(0, -r * 1.25); ctx.lineTo(r * 0.75, 0); ctx.lineTo(0, r * 1.25); ctx.lineTo(-r * 0.75, 0); ctx.closePath(); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = e.flash > 0 ? '#fff' : '#c4b5fd';
+    ctx.fillStyle = e.flash > 0 ? '#fff' : tox ? '#86efac' : '#c4b5fd';
     ctx.beginPath(); ctx.moveTo(0, -r * 1.25); ctx.lineTo(r * 0.3, 0); ctx.lineTo(0, r * 1.25); ctx.lineTo(-r * 0.15, 0); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
+  function drawBlob(e, t) {
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot + Math.sin(t * 2 + e.ph) * 0.2);
+    const s = e.r * 2.3, sq = 1 + Math.sin(t * 5 + e.ph) * 0.06;
+    ctx.scale(sq, 2 - sq);
+    if (ready(IMG.blob)) ctx.drawImage(IMG.blob, -s / 2, -s / 2, s, s);
+    else { ctx.fillStyle = '#4ade80'; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fill(); }
+    if (e.flash > 0) { ctx.fillStyle = '#ffffffaa'; ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+  function drawWalls(t) {
+    for (const w of G.walls) {
+      const l = w.gx - w.gw / 2, rgt = w.gx + w.gw / 2;
+      ctx.save();
+      ctx.fillStyle = '#14532d'; ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 3; ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 12;
+      for (const [a, z] of [[-10, l], [rgt, W + 10]]) {
+        ctx.beginPath(); ctx.moveTo(a, w.y - 12);
+        for (let x = a; x <= z; x += 12) ctx.lineTo(x, w.y - 12 + Math.sin(t * 6 + x * 0.08 + w.ph) * 4);
+        for (let x = z; x >= a; x -= 12) ctx.lineTo(x, w.y + 12 + Math.sin(t * 6 + x * 0.08 + w.ph + 1) * 4);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      // puntas de tentáculo en los bordes del hueco
+      ctx.strokeStyle = '#86efac'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      for (const [x, dir] of [[l, 1], [rgt, -1]]) {
+        ctx.beginPath(); ctx.moveTo(x, w.y);
+        ctx.quadraticCurveTo(x + dir * 14, w.y + Math.sin(t * 8 + w.ph) * 10, x + dir * 22, w.y + Math.sin(t * 8 + w.ph + 1) * 14); ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+  function drawSplats() {
+    for (const sp of G.splats) {
+      ctx.save(); ctx.globalAlpha = Math.min(1, sp.life) * 0.88;
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2); ctx.fill();
+      for (let k = 0; k < 7; k++) {
+        const a = sp.seed + k * 0.9, d = sp.r * (0.8 + (k % 3) * 0.2);
+        ctx.beginPath(); ctx.arc(sp.x + Math.cos(a) * d, sp.y + Math.sin(a) * d, sp.r * (0.25 + (k % 2) * 0.15), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = '#86efac';
+      ctx.beginPath(); ctx.arc(sp.x - sp.r * 0.3, sp.y - sp.r * 0.3, sp.r * 0.18, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
   function drawMine(e, t) {
     ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot);
-    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2.5;
+    const sp = e.spore, c1 = sp ? '#4ade80' : '#a855f7', c2 = sp ? '#86efac' : '#c084fc';
+    ctx.strokeStyle = c1; ctx.lineWidth = 2.5;
     for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * e.r, Math.sin(a) * e.r); ctx.lineTo(Math.cos(a) * (e.r + 6), Math.sin(a) * (e.r + 6)); ctx.stroke(); }
-    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 14;
-    ctx.fillStyle = e.flash > 0 ? '#fff' : '#120a22';
+    ctx.shadowColor = c1; ctx.shadowBlur = 14;
+    ctx.fillStyle = e.flash > 0 ? '#fff' : sp ? '#0a1f10' : '#120a22';
     ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#c084fc'; ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.4;
+    ctx.fillStyle = c2; ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.4;
     ctx.beginPath(); ctx.arc(0, 0, e.r * 0.35, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
@@ -1101,14 +1301,15 @@
       ctx.save();
       if (bm.warn > 0) { // línea de aviso
         ctx.globalAlpha = 0.35 + Math.sin(t * 30) * 0.25;
-        ctx.strokeStyle = '#bfe3ff'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
+        ctx.strokeStyle = bm.col === 'pulsar' ? '#bfe3ff' : '#86efac'; ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
         ctx.beginPath();
         if (bm.v) { ctx.moveTo(bm.pos, 0); ctx.lineTo(bm.pos, H); } else { ctx.moveTo(0, bm.pos); ctx.lineTo(W, bm.pos); }
         ctx.stroke();
       } else {
         const w = bm.w * (0.7 + Math.random() * 0.3);
         const g = bm.v ? ctx.createLinearGradient(bm.pos - w, 0, bm.pos + w, 0) : ctx.createLinearGradient(0, bm.pos - w, 0, bm.pos + w);
-        g.addColorStop(0, '#5aa9ff00'); g.addColorStop(0.35, '#7cc4ffcc'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(0.65, '#7cc4ffcc'); g.addColorStop(1, '#5aa9ff00');
+        const [c0, c1, c2] = bm.col === 'pulsar' ? ['#5aa9ff00', '#7cc4ffcc', '#ffffff'] : ['#22c55e00', '#22c55ecc', '#bbf7d0'];
+        g.addColorStop(0, c0); g.addColorStop(0.35, c1); g.addColorStop(0.5, c2); g.addColorStop(0.65, c1); g.addColorStop(1, c0);
         ctx.fillStyle = g;
         if (bm.v) ctx.fillRect(bm.pos - w, 0, w * 2, H); else ctx.fillRect(0, bm.pos - w, W, w * 2);
       }
@@ -1117,8 +1318,9 @@
   }
 
   function drawEnt(e, t) {
-    if (e.type === 'meteor') return e.kind === 'crystal' ? drawCrystal(e) : drawMeteor(e);
+    if (e.type === 'meteor') return e.kind === 'rock' ? drawMeteor(e) : drawCrystal(e);
     if (e.type === 'mine') return drawMine(e, t);
+    if (e.type === 'blob') return drawBlob(e, t);
     ctx.save(); ctx.translate(e.x, e.y);
     if (e.type === 'dust') {
       ctx.rotate(t * 3 + e.x);
@@ -1205,6 +1407,57 @@
     ctx.restore();
   }
 
+  function drawAlien(b, t) {
+    ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.sc, b.sc);
+    if (b.dash && b.dash.phase === 'warn') ctx.translate(rand(-5, 5), rand(-5, 5));
+    const flash = b.flash > 0;
+    // tentáculos que cuelgan de la nave
+    ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+      const x0 = -75 + i * 30, sw = Math.sin(t * 4 + i) * 16;
+      ctx.beginPath(); ctx.moveTo(x0, 30); ctx.bezierCurveTo(x0 + sw, 60, x0 - sw, 80, x0 + sw * 1.5, 100 + Math.sin(t * 3 + i) * 10); ctx.stroke();
+    }
+    // motores con fuego verde
+    [-68, 68].forEach(x => {
+      const g = ctx.createRadialGradient(x, 22, 2, x, 22, 24);
+      g.addColorStop(0, '#f0fdf4'); g.addColorStop(0.4, '#22c55e'); g.addColorStop(1, '#22c55e00');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, 22, 22 + Math.sin(t * 20) * 3, 0, Math.PI * 2); ctx.fill();
+    });
+    // casco infectado
+    ctx.fillStyle = flash ? '#fff' : b.dash && b.dash.phase === 'warn' ? '#3b0d0d' : '#0d1a10'; ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 3.5; ctx.lineJoin = 'round';
+    ctx.shadowColor = '#22c55e'; ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.moveTo(-100, -14); ctx.lineTo(-40, -40); ctx.lineTo(40, -40); ctx.lineTo(100, -14);
+    ctx.lineTo(74, 22); ctx.lineTo(30, 44); ctx.lineTo(0, 66); ctx.lineTo(-30, 44); ctx.lineTo(-74, 22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    // venas de baba y cristales
+    ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-90, -10); ctx.quadraticCurveTo(-50, 10, -30, 40); ctx.moveTo(90, -10); ctx.quadraticCurveTo(50, 10, 30, 40); ctx.stroke();
+    ctx.fillStyle = '#4ade80';
+    for (const [x, y] of [[-60, -30], [55, -32], [-20, 50], [80, -8]]) {
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 5, y - 14); ctx.lineTo(x + 10, y); ctx.closePath(); ctx.fill();
+    }
+    // gotas de baba
+    for (let i = 0; i < 4; i++) {
+      const x = -60 + i * 40, d = 6 + ((t * 30 + i * 13) % 26);
+      ctx.beginPath(); ctx.arc(x, 30 + d, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // cabina con Alien Apolo
+    const R = 32;
+    if (ready(IMG['alien-apolo-head'])) {
+      ctx.save(); ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(IMG['alien-apolo-head'], -R, 2 - R, R * 2, R * 2); ctx.restore();
+    }
+    ctx.strokeStyle = '#86efac'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 2, R, 0, Math.PI * 2); ctx.stroke();
+    if (b.stage === 3 && b.t - b.lastHit > 1.5 && b.hp < b.max * 0.3) { // aura de curación
+      ctx.strokeStyle = '#4ade80'; ctx.globalAlpha = 0.5 + Math.sin(t * 10) * 0.3; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(0, 10, 120, 75, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function draw(dt) {
     const playing = state === 'play';
     const speed = playing && G ? 150 * difficulty() : 40;
@@ -1226,8 +1479,9 @@
         ctx.beginPath(); ctx.arc(s.x, s.y + 6, s.r, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
         ctx.beginPath(); ctx.arc(s.x, s.y + 12, s.r * 0.7, Math.PI * 1.2, Math.PI * 1.8); ctx.stroke();
       }
+      drawWalls(t);
       drawBeams(t);
-      if (G.boss && G.phase !== 'won') (G.boss.kind === 'nyx' ? drawNyx : drawApolo)(G.boss, t);
+      if (G.boss && G.phase !== 'won') ({ apolo: drawApolo, nyx: drawNyx, alien: drawAlien }[G.boss.kind])(G.boss, t);
       // disparos de los jefes
       for (const s of G.enemyShots) {
         if (s.moon) { // luna creciente
@@ -1236,7 +1490,8 @@
           ctx.beginPath(); ctx.arc(0, 0, s.r + 3, Math.PI * 0.2, Math.PI * 1.8); ctx.arc(4, 0, s.r - 1, Math.PI * 1.75, Math.PI * 0.25, true); ctx.fill();
           ctx.restore();
         } else {
-          ctx.fillStyle = '#ff4d5e'; ctx.shadowColor = '#ff4d5e'; ctx.shadowBlur = 12;
+          const c = s.acid ? '#4ade80' : '#ff4d5e';
+          ctx.fillStyle = c; ctx.shadowColor = c; ctx.shadowBlur = 12;
           ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
         }
       }
@@ -1247,6 +1502,7 @@
       }
       ctx.globalAlpha = 1;
       if (state === 'play' || state === 'pause' || state === 'cutscene') drawGaia(G.p, t);
+      drawSplats();
       ctx.textAlign = 'center';
       for (const tx of G.texts) {
         ctx.globalAlpha = Math.min(1, tx.life * 2); ctx.fillStyle = tx.color;
@@ -1316,6 +1572,7 @@
     $('mDust').textContent = save.dust;
     $('mStreak').textContent = save.streak;
     $('lvl2Btn').hidden = !save.unlocked2;
+    $('lvl3Btn').hidden = !save.unlocked3;
     $('mMissions').innerHTML = (dailyBonus ? `<div class="row done"><span>🔥 Bono diario (racha ${save.streak})</span><span class="rw">+${dailyBonus} ✦</span></div>` : '') + missionHTML(save.missions);
   }
   function showFame() { state = 'fame'; showOnly('fame'); $('fBoard').innerHTML = boardHTML(-1); }
@@ -1354,8 +1611,8 @@
     state = 'over'; pauseMusic(); track = null;
     const score = Math.floor(G.score);
     const bossName = BOSSES[LEVELS[G.level].boss].name;
-    const reached = won ? 'Nyx 🏆' : G.phase === 'boss' ? bossName : `${G.level ? 'N2 · ' : ''}Sector ${G.sector + 1}`;
-    lastRun = { score, won, reached, apolo: G.apoloDown, saved: false };
+    const reached = won ? 'Alien Apolo 🏆' : G.phase === 'boss' ? bossName : `${G.level ? `N${G.level + 1} · ` : ''}Sector ${G.sector + 1}`;
+    lastRun = { score, won, reached, beaten: G.beaten.slice(), saved: false };
     $('cardBox').hidden = true;
     if (score > save.best) save.best = score;
     if (won) save.wins++;
@@ -1363,7 +1620,7 @@
     save.dust += earned; save.games++;
 
     const prog = { dust: G.dust, combo: G.maxCombo, meteors: G.meteors, near: G.near, score, howls: G.howls,
-      sector: G.level > 0 ? 5 : G.phase === 'sector' ? G.sector + 1 : 4 };
+      sector: G.level > 0 ? 4 + G.level : G.phase === 'sector' ? G.sector + 1 : 4 };
     let bonus = 0;
     const shown = save.missions.map(m => {
       if (prog[m.k] >= m.n) { bonus += m.reward; save.missionLevel++; return Object.assign({}, m, { done: true }); }
@@ -1375,9 +1632,9 @@
     save.missions = keep;
     persist();
 
-    $('oTitle').innerHTML = won ? '<span class="win">¡Gaia derrotó a Nyx! 🏆</span>' : 'Gaia fue alcanzada';
-    $('oSub').textContent = won ? '¡Pasaste los 2 niveles! Apolo y Nyx fueron derrotados.'
-      : `${G.apoloDown ? '🏆 Venciste a Apolo · ' : ''}${Math.floor(G.t)}s de viaje · ${G.meteors} obstáculos rotos · ${G.near} roces`;
+    $('oTitle').innerHTML = won ? '<span class="win">¡Gaia liberó a Apolo! 🏆</span>' : 'Gaia fue alcanzada';
+    $('oSub').textContent = won ? '¡Pasaste los 3 niveles! El simbionte fue destruido… ¿o no?'
+      : `${G.beaten.length ? `🏆 Venciste a ${G.beaten.join(' y ')} · ` : ''}${Math.floor(G.t)}s de viaje · ${G.meteors} obstáculos rotos · ${G.near} roces`;
     $('oScore').textContent = score;
     $('oSector').textContent = reached;
     $('oDust').textContent = '+' + (earned + bonus);
@@ -1431,10 +1688,11 @@
     x.fillText(lastRun.name || save.lastName || 'Piloto de Gaia', 540, 770);
     x.fillStyle = '#ffcf6b'; x.font = '900 130px Raleway, sans-serif';
     x.fillText(String(lastRun.score), 540, 900);
-    x.fillStyle = '#f4f6ff'; x.font = '700 40px Raleway, sans-serif';
-    x.fillText(lastRun.won ? '🏆 ¡Derroté a Apolo y a Nyx!' : lastRun.apolo ? `🏆 Vencí a Apolo · llegué a ${lastRun.reached}` : `Llegué a: ${lastRun.reached}`, 540, 970);
+    const line = lastRun.won ? '🏆 ¡Pasé los 3 niveles!' : lastRun.beaten.length ? `🏆 Vencí a ${lastRun.beaten.join(' y ')} · llegué a ${lastRun.reached}` : `Llegué a: ${lastRun.reached}`;
+    x.fillStyle = '#f4f6ff'; x.font = `700 ${line.length > 34 ? 30 : 40}px Raleway, sans-serif`;
+    x.fillText(line, 540, 970);
     x.fillStyle = '#9aa3c7'; x.font = '400 28px Raleway, sans-serif';
-    x.fillText('Gaia vs Apolo y Nyx · ¿Me superas?', 540, 1030);
+    x.fillText('Gaia vs Apolo, Nyx y Alien Apolo · ¿Me superas?', 540, 1030);
     return c;
   }
   function cardBlob() {
@@ -1458,7 +1716,7 @@
   async function share() {
     if (!lastRun) return;
     const text = lastRun.won
-      ? `🐶🚀 ¡Derroté a Apolo y a Nyx en Outs of Space con ${lastRun.score} puntos! ¿Me superas?`
+      ? `🐶🚀 ¡Pasé los 3 niveles de Outs of Space y derroté a Alien Apolo con ${lastRun.score} puntos! ¿Me superas?`
       : `🐶🚀 Saqué ${lastRun.score} puntos en Outs of Space (llegué a ${lastRun.reached}). ¿Me superas?`;
     const url = location.href.split('#')[0];
     try {
@@ -1507,8 +1765,9 @@
   $('againBtn').onclick = start;
   $('shopPlay').onclick = start;
   $('fightBtn').onclick = startBoss;
-  $('lvl2Go').onclick = startLevel2;
+  $('lvlGo').onclick = startNextLevel;
   $('lvl2Btn').onclick = () => start(1);
+  $('lvl3Btn').onclick = () => start(2);
   $('shopBtn').onclick = () => showShop('menu');
   $('overShopBtn').onclick = () => showShop('over');
   $('shopBack').onclick = () => shopReturn === 'over' ? (state = 'over', showOnly('over')) : showMenu();
