@@ -1,0 +1,47 @@
+{
+  "formato": "youtube",
+  "fps": 30,
+  "duracion": 4,
+  "movimiento": "zoom-in",
+  "transicion": { "tipo": "fundido", "duracion": 0.6 },
+  "escenas": [
+    {
+      "nombre": "portada",
+      "fondo": { "degradado": ["#14161c", "#2a2e3a"], "angulo": 135, "vineta": 0.5, "grano": 0.06 },
+      "capas": [
+        { "tipo": "imagen", "src": "logo-codeofodin.png", "x": "50%", "y": "42%", "ancho": 560, "alto": 560, "ancla": "centro", "radio": "50%", "sombra": true },
+        { "tipo": "texto", "posicion": "abajo", "texto": "Bienvenido a **CodeOfOdin**", "fuente": "Bebas Neue", "peso": 400, "tamano": 120, "espaciado": 4, "colorResaltado": "#e3cba8" }
+      ]
+    },
+    {
+      "nombre": "titulo",
+      "movimiento": "paneo-der",
+      "fondo": { "imagen": "logo-codeofodin.png", "filtros": { "desenfoque": 18, "brillo": 0.5 }, "superposicion": { "degradado": ["rgba(10,10,14,.9)", "rgba(10,10,14,.2)"], "angulo": 90 } },
+      "capas": [
+        { "tipo": "texto", "x": 140, "y": 330, "ancho": 1100, "texto": "3 trucos de\n**código** que\nnadie te enseña", "fuente": "Montserrat", "peso": 900, "tamano": 110, "colorResaltado": "#66ffcc" },
+        { "tipo": "forma", "x": 140, "y": 290, "ancho": 160, "alto": 10, "color": "#66ffcc", "radio": 5 }
+      ]
+    },
+    {
+      "nombre": "punto-1",
+      "movimiento": "zoom-out",
+      "transicion": "deslizar-izq",
+      "fondo": { "color": "#e3cba8" },
+      "capas": [
+        { "tipo": "forma", "forma": "circulo", "x": 1250, "y": -200, "ancho": 900, "alto": 900, "color": "#1e1f26", "opacidad": 0.08 },
+        { "tipo": "texto", "x": 160, "y": 200, "texto": "01", "fuente": "Anton", "peso": 400, "tamano": 260, "color": "#1e1f26" },
+        { "tipo": "texto", "x": 160, "y": 520, "ancho": 1300, "texto": "Nombra tus variables\ncomo si fueran a leerlas otros.", "fuente": "Poppins", "peso": 600, "tamano": 72, "color": "#1e1f26", "interlineado": 1.25 },
+        { "tipo": "texto", "x": 160, "y": 860, "texto": "codeofodin", "fuente": "Inter", "peso": 500, "tamano": 36, "color": "#1e1f26", "fondo": "rgba(30,31,38,.1)", "relleno": "10px 22px", "radio": 40 }
+      ]
+    },
+    {
+      "nombre": "cierre",
+      "movimiento": "ninguno",
+      "fondo": { "degradado": ["#66ffcc", "#3b6cff"], "angulo": 120 },
+      "capas": [
+        { "tipo": "texto", "posicion": "centro", "texto": "Suscríbete\npara más", "fuente": "Bebas Neue", "peso": 400, "tamano": 200, "color": "#0e1016", "interlineado": 0.95 },
+        { "tipo": "imagen", "src": "logo-codeofodin.png", "x": 1700, "y": 860, "ancho": 160, "alto": 160, "radio": "50%", "borde": { "ancho": 6, "color": "#0e1016" } }
+      ]
+    }
+  ]
+}

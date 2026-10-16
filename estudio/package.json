@@ -1,0 +1,21 @@
+{
+  "name": "estudio",
+  "private": true,
+  "type": "module",
+  "description": "Estudio de imágenes y video: compone escenas desde un JSON, las exporta a PNG y las convierte en MP4.",
+  "scripts": {
+    "demo": "node estudio.mjs ejemplos/demo/proyecto.json"
+  },
+  "dependencies": {
+    "@fontsource/anton": "^5.0.0",
+    "@fontsource/bebas-neue": "^5.0.0",
+    "@fontsource/inter": "^5.0.0",
+    "@fontsource/lora": "^5.0.0",
+    "@fontsource/montserrat": "^5.0.0",
+    "@fontsource/oswald": "^5.0.0",
+    "@fontsource/playfair-display": "^5.0.0",
+    "@fontsource/poppins": "^5.0.0",
+    "@fontsource/roboto": "^5.0.0",
+    "playwright": "1.56.1"
+  }
+}
