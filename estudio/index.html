@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#05060f">
+  <title>Estudio Espacial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05060f;
+      --panel: #11131f;
+      --panel-2: #1a1d2c;
+      --line: #2a2e42;
+      --text: #f2f3f8;
+      --muted: #9aa0b8;
+      --accent: #66ffcc;
+      --accent-2: #7b6cff;
+      --danger: #ff6b81;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', system-ui, sans-serif;
+      background: radial-gradient(circle at 20% 0%, #1b1640 0%, var(--bg) 55%);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    header {
+      padding: calc(16px + env(safe-area-inset-top)) 16px 8px;
+      max-width: 760px;
+      margin: auto;
+    }
+    header h1 { margin: 0; font-size: 1.4em; }
+    header h1 span { color: var(--accent); }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: .85em; }
+    main { max-width: 760px; margin: auto; padding: 0 16px 120px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1em; display: flex; align-items: center; gap: 8px; }
+    .step {
+      background: var(--accent); color: #05060f; border-radius: 50%;
+      width: 22px; height: 22px; display: inline-grid; place-items: center; font-size: .75em;
+    }
+    label { display: block; font-size: .8em; color: var(--muted); margin: 8px 0 4px; }
+    input[type=text], input[type=number], select, textarea {
+      width: 100%; background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; font-size: 16px;
+    }
+    textarea { resize: vertical; min-height: 44px; }
+    button, .btn {
+      font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 11px 14px;
+      background: var(--panel-2); color: var(--text); cursor: pointer; border: 1px solid var(--line);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;
+    }
+    button:disabled { opacity: .45; cursor: default; }
+    .primary { background: linear-gradient(90deg, var(--accent-2), #c04bd8); border: 0; color: #fff; }
+    .accent { background: var(--accent); color: #05060f; border: 0; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row > * { flex: 1; }
+    .row > .shrink { flex: 0 0 auto; }
+    .seg { display: flex; background: var(--panel-2); border-radius: 12px; padding: 4px; gap: 4px; }
+    .seg button { flex: 1; border: 0; background: transparent; padding: 8px; font-size: .85em; }
+    .seg button.on { background: var(--accent); color: #05060f; }
+    .seg button.on .muted { color: #05060fb3; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chips button { padding: 6px 10px; font-size: .75em; border-radius: 999px; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 10px; }
+    .result { position: relative; border-radius: 10px; overflow: hidden; background: var(--panel-2); aspect-ratio: 1; border: 0; padding: 0; }
+    .result img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .result .badge {
+      position: absolute; top: 4px; left: 4px; background: #000a; color: #fff; font-size: .65em;
+      padding: 2px 6px; border-radius: 6px;
+    }
+    .result .plus {
+      position: absolute; bottom: 4px; right: 4px; background: var(--accent); color: #05060f;
+      width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800;
+    }
+    .result.busy::after {
+      content: 'Agregando…'; position: absolute; inset: 0; background: #000b; display: grid; place-items: center; font-size: .75em;
+    }
+    .muted { color: var(--muted); font-size: .8em; }
+    .scene {
+      display: grid; grid-template-columns: 72px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line);
+    }
+    .scene:first-of-type { border-top: 0; }
+    .scene .thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; background: var(--panel-2); }
+    .scene .tools { display: flex; gap: 6px; margin-top: 6px; }
+    .scene .tools button { padding: 6px 10px; font-size: .8em; }
+    .scene .tools .del { color: var(--danger); }
+    .scene input, .scene textarea { padding: 8px; }
+    .stage-wrap { display: flex; justify-content: center; background: #000; border-radius: 12px; overflow: hidden; }
+    canvas#stage { display: block; max-width: 100%; max-height: 62vh; background: #000; }
+    .progress { height: 6px; background: var(--panel-2); border-radius: 6px; overflow: hidden; margin-top: 10px; }
+    .progress div { height: 100%; width: 0; background: var(--accent); transition: width .1s linear; }
+    #status { margin-top: 8px; min-height: 1.2em; }
+    #result video { width: 100%; max-height: 60vh; border-radius: 12px; background: #000; margin-top: 10px; }
+    .error { color: var(--danger); }
+    #hidden-media { position: fixed; left: 0; top: 0; width: 2px; height: 2px; opacity: 0; pointer-events: none; overflow: hidden; }
+    .empty { text-align: center; padding: 18px 0; }
+    details summary { cursor: pointer; color: var(--muted); font-size: .85em; }
+    footer { text-align: center; color: var(--muted); font-size: .75em; padding: 20px 16px 40px; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚀 Estudio <span>Espacial</span></h1>
+    <p>Crea videos informativos del espacio con material gratuito de la NASA. Gratis y sin límites.</p>
+  </header>
+
+  <main>
+    <!-- 1. Formato -->
+    <section class="card">
+      <h2><span class="step">1</span> Formato</h2>
+      <div class="seg" id="format-seg">
+        <button data-format="vertical" class="on">Vertical 9:16<br><span class="muted">Reels · TikTok · Shorts</span></button>
+        <button data-format="horizontal">Horizontal 16:9<br><span class="muted">YouTube</span></button>
+      </div>
+      <div class="row">
+        <div>
+          <label for="handle">Tu marca / usuario (opcional)</label>
+          <input type="text" id="handle" placeholder="@tucuenta" maxlength="40">
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Buscar -->
+    <section class="card">
+      <h2><span class="step">2</span> Busca material de la NASA</h2>
+      <div class="row">
+        <input type="text" id="query" placeholder="Ej: Marte, agujero negro, Saturno…" enterkeyhint="search">
+        <button class="accent shrink" id="search-btn">Buscar</button>
+      </div>
+      <div class="seg" id="type-seg" style="margin-top:8px">
+        <button data-type="image" class="on">📷 Fotos</button>
+        <button data-type="video">🎬 Videos</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="search-status" class="muted" style="margin-top:8px"></div>
+      <div class="grid" id="results"></div>
+      <div id="more-wrap" style="margin-top:10px; display:none">
+        <button id="more-btn" style="width:100%">Ver más resultados</button>
+      </div>
+      <details style="margin-top:12px">
+        <summary>¿Quieres usar tus propios videos o imágenes (por ejemplo, de Google Flow)?</summary>
+        <label for="upload" class="btn" style="margin-top:8px; width:100%">📁 Subir desde mi teléfono</label>
+        <input type="file" id="upload" accept="image/*,video/*" multiple hidden>
+      </details>
+    </section>
+
+    <!-- 3. Escenas -->
+    <section class="card">
+      <h2><span class="step">3</span> Escenas y textos</h2>
+      <div id="scenes"></div>
+      <div class="muted" id="total-time"></div>
+    </section>
+
+    <!-- 4. Audio -->
+    <section class="card">
+      <h2><span class="step">4</span> Música o voz (opcional)</h2>
+      <p class="muted" style="margin:0 0 8px">Sube tu narración o una música libre de derechos (por ejemplo, de la Biblioteca de Audio de YouTube).</p>
+      <div class="row">
+        <label for="audio-file" class="btn" style="margin:0">🎵 Elegir audio</label>
+        <button class="shrink" id="audio-clear" style="display:none">Quitar</button>
+      </div>
+      <input type="file" id="audio-file" accept="audio/*,video/mp4" hidden>
+      <div id="audio-name" class="muted" style="margin-top:6px"></div>
+    </section>
+
+    <!-- 5. Vista previa y exportar -->
+    <section class="card">
+      <h2><span class="step">5</span> Vista previa y descarga</h2>
+      <div class="stage-wrap"><canvas id="stage"></canvas></div>
+      <div class="progress"><div id="bar"></div></div>
+      <div id="status" class="muted"></div>
+      <div class="row" style="margin-top:10px">
+        <button id="preview-btn">▶️ Vista previa</button>
+        <button id="export-btn" class="primary">⬇️ Crear video</button>
+      </div>
+      <p class="muted" style="margin:8px 0 0">El video se graba en tiempo real: un video de 30 segundos tarda unos 30 segundos. Mantén la pantalla encendida y esta página abierta.</p>
+      <div id="result"></div>
+    </section>
+  </main>
+
+  <div id="hidden-media"></div>
+
+  <footer>
+    Material: <a href="https://images.nasa.gov" target="_blank" rel="noopener">NASA Image and Video Library</a>.
+    El material de la NASA es generalmente de dominio público; no uses el logo de la NASA ni des a entender que te patrocina.
+  </footer>
+
+<script>
+(() => {
+  const API = 'https://images-api.nasa.gov';
+  const STORAGE_KEY = 'estudio-espacial-v1';
+  const FADE = 0.45;
+  const SUGGESTIONS = ['Marte', 'Luna', 'Saturno', 'Júpiter', 'James Webb', 'Nebulosa', 'Galaxia', 'Agujero negro', 'Sol', 'Estación Espacial', 'Artemis', 'Tierra desde el espacio'];
+  // NASA's library is indexed in English, so translate common Spanish searches.
+  const EN = {
+    'marte': 'mars', 'luna': 'moon', 'saturno': 'saturn', 'júpiter': 'jupiter', 'jupiter': 'jupiter',
+    'nebulosa': 'nebula', 'galaxia': 'galaxy', 'agujero negro': 'black hole', 'sol': 'sun',
+    'estación espacial': 'international space station', 'tierra desde el espacio': 'earth from space',
+    'tierra': 'earth', 'venus': 'venus', 'mercurio': 'mercury', 'urano': 'uranus', 'neptuno': 'neptune',
+    'plutón': 'pluto', 'cometa': 'comet', 'asteroide': 'asteroid', 'estrella': 'star', 'estrellas': 'stars',
+    'cohete': 'rocket launch', 'lanzamiento': 'launch', 'astronauta': 'astronaut', 'caminata espacial': 'spacewalk',
+    'eclipse': 'eclipse', 'aurora': 'aurora', 'universo': 'universe', 'telescopio': 'telescope',
+    'vía láctea': 'milky way', 'via lactea': 'milky way', 'supernova': 'supernova', 'exoplaneta': 'exoplanet'
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('stage');
+  const ctx = canvas.getContext('2d');
+
+  const state = {
+    format: 'vertical',
+    handle: '',
+    type: 'image',
+    query: '',
+    page: 1,
+    scenes: [],
+    audio: null, // { url, name }
+    busy: false,
+  };
+  let nextId = 1;
+
+  // ---------- Persistence (only NASA scenes; uploaded files can't be saved) ----------
+  function save() {
+    try {
+      const data = {
+        format: state.format,
+        handle: state.handle,
+        scenes: state.scenes.filter((s) => s.remote).map((s) => ({
+          kind: s.kind, src: s.src, thumb: s.thumb, title: s.title, caption: s.caption,
+          credit: s.credit, duration: s.duration, remote: true,
+        })),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function load() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!data) return;
+      state.format = data.format === 'horizontal' ? 'horizontal' : 'vertical';
+      state.handle = data.handle || '';
+      state.scenes = (data.scenes || []).map((s) => ({ ...s, id: nextId++, el: null, blobUrl: null }));
+    } catch (e) { /* ignore */ }
+  }
+
+  // ---------- Format ----------
+  function applyFormat() {
+    if (state.format === 'vertical') { canvas.width = 1080; canvas.height = 1920; }
+    else { canvas.width = 1920; canvas.height = 1080; }
+    document.querySelectorAll('#format-seg button').forEach((b) => b.classList.toggle('on', b.dataset.format === state.format));
+    drawIdle();
+  }
+
+  $('format-seg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b || state.busy) return;
+    state.format = b.dataset.format;
+    applyFormat();
+    save();
+  });
+
+  $('handle').addEventListener('input', (e) => { state.handle = e.target.value; save(); drawIdle(); });
+
+  // ---------- Search ----------
+  SUGGESTIONS.forEach((s) => {
+    const b = document.createElement('button');
+    b.textContent = s;
+    b.onclick = () => { $('query').value = s; search(true); };
+    $('chips').appendChild(b);
+  });
+
+  $('type-seg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    state.type = b.dataset.type;
+    document.querySelectorAll('#type-seg button').forEach((x) => x.classList.toggle('on', x === b));
+    if ($('query').value.trim()) search(true);
+  });
+
+  $('search-btn').onclick = () => search(true);
+  $('query').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); search(true); } });
+  $('more-btn').onclick = () => search(false);
+
+  function toEnglish(q) {
+    const key = q.trim().toLowerCase();
+    return EN[key] || q.trim();
+  }
+
+  async function search(reset) {
+    const q = $('query').value.trim();
+    if (!q) return;
+    $('query').blur();
+    if (reset) { state.page = 1; $('results').innerHTML = ''; }
+    else state.page += 1;
+    state.query = q;
+    $('search-status').textContent = 'Buscando…';
+    $('more-wrap').style.display = 'none';
+    try {
+      const url = `${API}/search?q=${encodeURIComponent(toEnglish(q))}&media_type=${state.type}&page=${state.page}&page_size=24`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
+      const items = json.collection.items || [];
+      if (!items.length && reset) {
+        $('search-status').textContent = 'No encontré resultados. Prueba otra palabra (en inglés suele dar más resultados).';
+        return;
+      }
+      $('search-status').textContent = '';
+      items.forEach(renderResult);
+      const hasNext = (json.collection.links || []).some((l) => l.rel === 'next');
+      $('more-wrap').style.display = hasNext ? 'block' : 'none';
+    } catch (err) {
+      $('search-status').innerHTML = '<span class="error">No pude conectar con la NASA. Revisa tu conexión e inténtalo otra vez.</span>';
+    }
+  }
+
+  function renderResult(item) {
+    const d = item.data && item.data[0];
+    const preview = (item.links || []).find((l) => l.rel === 'preview' || /thumb/.test(l.href));
+    if (!d || !preview) return;
+    const b = document.createElement('button');
+    b.className = 'result';
+    b.title = d.title;
+    b.innerHTML = `<img loading="lazy" alt=""><span class="badge">${d.media_type === 'video' ? '🎬 Video' : '📷'}</span><span class="plus">+</span>`;
+    b.querySelector('img').src = https(preview.href);
+    b.onclick = async () => {
+      if (b.classList.contains('busy')) return;
+      b.classList.add('busy');
+      try { await addNasaItem(d, https(preview.href)); }
+      catch (err) { alert('No pude agregar este material. Prueba con otro.'); }
+      b.classList.remove('busy');
+    };
+    $('results').appendChild(b);
+  }
+
+  function https(url) { return encodeURI(decodeURI(url)).replace(/^http:/, 'https:'); }
+
+  function creditFor(d) {
+    const center = (d.center || '').trim();
+    const who = center && center !== 'HQ' ? `NASA/${center}` : 'NASA';
+    return `Crédito: ${who}`;
+  }
+
+  async function addNasaItem(d, thumb) {
+    const res = await fetch(`${API}/asset/${encodeURIComponent(d.nasa_id)}`);
+    if (!res.ok) throw new Error('asset');
+    const hrefs = (await res.json()).collection.items.map((i) => i.href);
+    let src;
+    if (d.media_type === 'video') {
+      src = ['~mobile.mp4', '~small.mp4', '~medium.mp4', '~preview.mp4', '~orig.mp4']
+        .map((suffix) => hrefs.find((h) => h.endsWith(suffix))).find(Boolean)
+        || hrefs.find((h) => /\.mp4$/i.test(h));
+    } else {
+      src = ['~large.jpg', '~medium.jpg', '~orig.jpg', '~large.png', '~orig.png']
+        .map((suffix) => hrefs.find((h) => h.endsWith(suffix))).find(Boolean)
+        || hrefs.find((h) => /\.(jpe?g|png)$/i.test(h));
+    }
+    if (!src) throw new Error('no media');
+    const scene = {
+      id: nextId++, kind: d.media_type === 'video' ? 'video' : 'image', src: https(src), thumb,
+      title: shorten(d.title, 60), caption: '', credit: creditFor(d), duration: 5, remote: true, el: null, blobUrl: null,
+    };
+    await prepareScene(scene);
+    if (scene.kind === 'video') scene.duration = Math.max(2, Math.min(8, Math.floor(scene.el.duration) || 6));
+    state.scenes.push(scene);
+    renderScenes();
+    save();
+  }
+
+  function shorten(s, n) { s = (s || '').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+  // ---------- Uploads ----------
+  $('upload').addEventListener('change', async (e) => {
+    for (const file of e.target.files) {
+      const kind = file.type.startsWith('video') ? 'video' : 'image';
+      const url = URL.createObjectURL(file);
+      const scene = {
+        id: nextId++, kind, src: url, blobUrl: url, thumb: kind === 'image' ? url : '', title: '', caption: '',
+        credit: '', duration: 5, remote: false, el: null,
+      };
+      try {
+        await prepareScene(scene);
+        if (kind === 'video') {
+          scene.duration = Math.max(2, Math.min(10, Math.floor(scene.el.duration) || 5));
+          scene.thumb = videoThumb(scene.el);
+        }
+        state.scenes.push(scene);
+      } catch (err) { alert(`No pude abrir "${file.name}".`); }
+    }
+    e.target.value = '';
+    renderScenes();
+  });
+
+  function videoThumb(video) {
+    try {
+      const c = document.createElement('canvas');
+      c.width = 144; c.height = 144;
+      drawCover(c.getContext('2d'), video, 144, 144, 1, 0, 0);
+      return c.toDataURL('image/jpeg', 0.7);
+    } catch (e) { return ''; }
+  }
+
+  // ---------- Media loading ----------
+  // Media is downloaded as a blob so the canvas stays exportable (no cross-origin tainting).
+  async function prepareScene(scene) {
+    if (scene.el) return scene.el;
+    if (!scene.blobUrl) {
+      const res = await fetch(scene.src);
+      if (!res.ok) throw new Error('download');
+      scene.blobUrl = URL.createObjectURL(await res.blob());
+    }
+    if (scene.kind === 'image') {
+      const img = new Image();
+      img.src = scene.blobUrl;
+      await img.decode();
+      scene.el = img;
+    } else {
+      const v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.loop = true; v.preload = 'auto';
+      v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+      v.src = scene.blobUrl;
+      $('hidden-media').appendChild(v);
+      await new Promise((resolve, reject) => {
+        v.onloadeddata = resolve;
+        v.onerror = () => reject(new Error('video'));
+        v.load();
+      });
+      scene.el = v;
+    }
+    return scene.el;
+  }
+
+  // ---------- Scenes UI ----------
+  function renderScenes() {
+    const box = $('scenes');
+    box.innerHTML = '';
+    if (!state.scenes.length) {
+      box.innerHTML = '<div class="empty muted">Todavía no hay escenas. Busca arriba y toca una foto o video para agregarla.</div>';
+      $('total-time').textContent = '';
+      drawIdle();
+      return;
+    }
+    state.scenes.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'scene';
+      el.innerHTML = `
+        <img class="thumb" alt="">
+        <div>
+          <input type="text" data-k="title" placeholder="Título (grande)" maxlength="80">
+          <textarea data-k="caption" rows="2" placeholder="Texto informativo (ej: Marte tiene el volcán más alto del sistema solar)" maxlength="220"></textarea>
+          <div class="row" style="margin-top:6px">
+            <input type="text" data-k="credit" placeholder="Crédito (ej: Crédito: NASA)" maxlength="60">
+            <select data-k="duration" class="shrink" style="width:86px">
+              ${[2, 3, 4, 5, 6, 7, 8, 10, 12, 15].map((n) => `<option value="${n}">${n} s</option>`).join('')}
+            </select>
+          </div>
+          <div class="tools">
+            <button data-a="up" ${i === 0 ? 'disabled' : ''}>↑</button>
+            <button data-a="down" ${i === state.scenes.length - 1 ? 'disabled' : ''}>↓</button>
+            <button data-a="show">👁 Ver</button>
+            <button data-a="del" class="del">Eliminar</button>
+          </div>
+        </div>`;
+      el.querySelector('.thumb').src = s.thumb || '';
+      el.querySelector('[data-k=title]').value = s.title;
+      el.querySelector('[data-k=caption]').value = s.caption;
+      el.querySelector('[data-k=credit]').value = s.credit;
+      const sel = el.querySelector('[data-k=duration]');
+      if (![...sel.options].some((o) => +o.value === s.duration)) sel.add(new Option(`${s.duration} s`, s.duration));
+      sel.value = s.duration;
+      el.querySelectorAll('[data-k]').forEach((input) => {
+        input.addEventListener('input', () => {
+          const k = input.dataset.k;
+          s[k] = k === 'duration' ? +input.value : input.value;
+          updateTotal(); save();
+          if (!state.busy) drawStill(s);
+        });
+      });
+      el.querySelector('.tools').addEventListener('click', async (e) => {
+        const b = e.target.closest('button');
+        if (!b || state.busy) return;
+        const a = b.dataset.a;
+        if (a === 'up' || a === 'down') {
+          const j = a === 'up' ? i - 1 : i + 1;
+          [state.scenes[i], state.scenes[j]] = [state.scenes[j], state.scenes[i]];
+          renderScenes(); save();
+        } else if (a === 'del') {
+          if (s.el && s.kind === 'video') s.el.remove();
+          if (s.blobUrl) URL.revokeObjectURL(s.blobUrl);
+          state.scenes.splice(i, 1);
+          renderScenes(); save();
+        } else if (a === 'show') {
+          try { await prepareScene(s); drawStill(s); canvas.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+          catch (err) { setStatus('No pude cargar esta escena.', true); }
+        }
+      });
+      box.appendChild(el);
+    });
+    updateTotal();
+    drawIdle();
+  }
+
+  function totalDuration() { return state.scenes.reduce((t, s) => t + s.duration, 0); }
+
+  function updateTotal() {
+    const t = totalDuration();
+    $('total-time').textContent = `${state.scenes.length} escena(s) · duración total: ${t} s`;
+  }
+
+  // ---------- Audio ----------
+  $('audio-file').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (state.audio) URL.revokeObjectURL(state.audio.url);
+    state.audio = { url: URL.createObjectURL(f), name: f.name };
+    $('audio-name').textContent = '🎵 ' + f.name;
+    $('audio-clear').style.display = '';
+    e.target.value = '';
+  });
+  $('audio-clear').onclick = () => {
+    if (state.audio) URL.revokeObjectURL(state.audio.url);
+    state.audio = null;
+    $('audio-name').textContent = '';
+    $('audio-clear').style.display = 'none';
+  };
+
+  // ---------- Drawing ----------
+  const W = () => canvas.width;
+  const H = () => canvas.height;
+  const isV = () => state.format === 'vertical';
+
+  function drawCover(c, el, w, h, zoom, panX, panY) {
+    const sw = el.videoWidth || el.naturalWidth || el.width;
+    const sh = el.videoHeight || el.naturalHeight || el.height;
+    if (!sw || !sh) return;
+    const scale = Math.max(w / sw, h / sh) * zoom;
+    const dw = sw * scale, dh = sh * scale;
+    const x = (w - dw) / 2 + panX * (dw - w) / 2;
+    const y = (h - dh) / 2 + panY * (dh - h) / 2;
+    c.drawImage(el, x, y, dw, dh);
+  }
+
+  function wrap(text, maxWidth) {
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function drawBackdrop() {
+    const g = ctx.createRadialGradient(W() * 0.3, H() * 0.2, 0, W() * 0.5, H() * 0.5, Math.max(W(), H()));
+    g.addColorStop(0, '#1b1640');
+    g.addColorStop(1, '#05060f');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W(), H());
+  }
+
+  // Draws one frame of a scene. t = seconds since scene start.
+  function drawScene(scene, index, t) {
+    const w = W(), h = H(), d = scene.duration;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+
+    const fade = Math.max(0, Math.min(1, t / FADE, (d - t) / FADE));
+    ctx.globalAlpha = fade;
+    if (scene.el) {
+      if (scene.kind === 'image') {
+        // Slow "Ken Burns" zoom and pan, alternating direction per scene.
+        const p = Math.min(1, t / d);
+        const dir = index % 2 === 0 ? 1 : -1;
+        drawCover(ctx, scene.el, w, h, 1.04 + 0.12 * p, dir * (p - 0.5) * 0.6, 0);
+      } else {
+        drawCover(ctx, scene.el, w, h, 1, 0, 0);
+      }
+    }
+
+    // Readability gradients.
+    const top = ctx.createLinearGradient(0, 0, 0, h * 0.35);
+    top.addColorStop(0, 'rgba(0,0,0,0.65)'); top.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = top; ctx.fillRect(0, 0, w, h * 0.35);
+    const bottom = ctx.createLinearGradient(0, h * 0.5, 0, h);
+    bottom.addColorStop(0, 'rgba(0,0,0,0)'); bottom.addColorStop(1, 'rgba(0,0,0,0.8)');
+    ctx.fillStyle = bottom; ctx.fillRect(0, h * 0.5, w, h * 0.5);
+
+    const textIn = Math.max(0, Math.min(1, (t - 0.25) / 0.5));
+    const textAlpha = fade * textIn;
+    const slide = (1 - textIn) * 30;
+    const margin = w * 0.07;
+    const maxW = w - margin * 2;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 18;
+
+    if (scene.title) {
+      const size = isV() ? 84 : 76;
+      ctx.font = `800 ${size}px Montserrat, sans-serif`;
+      const lines = wrap(scene.title.toUpperCase(), maxW).slice(0, 3);
+      let y = (isV() ? h * 0.11 : h * 0.12) + size - slide;
+      ctx.globalAlpha = textAlpha;
+      ctx.fillStyle = '#ffffff';
+      for (const l of lines) { ctx.fillText(l, w / 2, y); y += size * 1.12; }
+      // Accent underline.
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#66ffcc';
+      const uw = Math.min(maxW, w * 0.18) * textIn;
+      ctx.fillRect(w / 2 - uw / 2, y - size * 0.55, uw, isV() ? 8 : 6);
+      ctx.shadowBlur = 18;
+    }
+
+    if (scene.caption) {
+      const size = isV() ? 54 : 46;
+      ctx.font = `700 ${size}px Montserrat, sans-serif`;
+      const lines = wrap(scene.caption, maxW).slice(0, 6);
+      const lineH = size * 1.3;
+      // Keep captions above the area that Reels/TikTok cover with their buttons.
+      const bottomY = isV() ? h * 0.76 : h * 0.86;
+      let y = bottomY - (lines.length - 1) * lineH + slide;
+      const boxH = lines.length * lineH + size * 0.9;
+      ctx.globalAlpha = textAlpha * 0.55;
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#05060f';
+      roundRect(margin * 0.6, y - size * 1.25, w - margin * 1.2, boxH, 28);
+      ctx.globalAlpha = textAlpha;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ffffff';
+      for (const l of lines) { ctx.fillText(l, w / 2, y); y += lineH; }
+    }
+
+    ctx.shadowBlur = 8;
+    if (scene.credit) {
+      ctx.globalAlpha = fade * 0.85;
+      ctx.font = `500 ${isV() ? 30 : 26}px Montserrat, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(scene.credit, margin * 0.6, isV() ? h * 0.83 : h - 30);
+    }
+    drawHandle(fade);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  function drawHandle(alpha) {
+    if (!state.handle.trim()) return;
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.font = `700 ${isV() ? 36 : 30}px Montserrat, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#66ffcc';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 8;
+    ctx.fillText(state.handle.trim(), W() - W() * 0.05, isV() ? H() * 0.06 : 60);
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawStill(scene) {
+    if (state.busy) return;
+    const i = state.scenes.indexOf(scene);
+    drawScene(scene, i, Math.min(scene.duration / 2, 1.5));
+  }
+
+  function drawIdle() {
+    if (state.busy) return;
+    const first = state.scenes.find((s) => s.el);
+    if (first) { drawStill(first); return; }
+    drawBackdrop();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#9aa0b8';
+    ctx.font = `700 ${isV() ? 52 : 44}px Montserrat, sans-serif`;
+    ctx.fillText('Tu video aparecerá aquí', W() / 2, H() / 2);
+    drawHandle(1);
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  }
+
+  // ---------- Playback / recording ----------
+  function setStatus(msg, isError) {
+    $('status').innerHTML = isError ? `<span class="error">${msg}</span>` : msg;
+  }
+
+  function setBusy(b) {
+    state.busy = b;
+    $('preview-btn').disabled = b;
+    $('export-btn').disabled = b;
+  }
+
+  async function prepareAll() {
+    for (let i = 0; i < state.scenes.length; i++) {
+      setStatus(`Preparando escena ${i + 1} de ${state.scenes.length}…`);
+      await prepareScene(state.scenes[i]);
+    }
+    try { await document.fonts.load('800 60px Montserrat'); await document.fonts.load('700 40px Montserrat'); } catch (e) { /* fallback font */ }
+  }
+
+  function pickMime() {
+    const types = [
+      'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+      'video/mp4;codecs=avc1',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ];
+    return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  // Plays the timeline on the canvas. `onStart` gets the audio stream (if any) so the caller can start recording.
+  function runTimeline(onStart) {
+    return new Promise(async (resolve) => {
+      const scenes = state.scenes;
+      const total = totalDuration();
+      let audioEl = null, audioCtx = null, audioDest = null, gain = null;
+      if (state.audio) {
+        audioEl = new Audio(state.audio.url);
+        audioEl.playsInline = true;
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const src = audioCtx.createMediaElementSource(audioEl);
+          gain = audioCtx.createGain();
+          audioDest = audioCtx.createMediaStreamDestination();
+          src.connect(gain);
+          gain.connect(audioCtx.destination);
+          gain.connect(audioDest);
+          await audioCtx.resume();
+        } catch (e) { audioCtx = null; audioDest = null; }
+      }
+      const ctrl = await onStart(audioDest);
+      let current = -1;
+      const start = performance.now();
+      if (audioEl) { audioEl.currentTime = 0; audioEl.play().catch(() => {}); }
+
+      const frame = () => {
+        const elapsed = (performance.now() - start) / 1000;
+        if (elapsed >= total || (ctrl && ctrl.cancelled)) {
+          scenes.forEach((s) => s.kind === 'video' && s.el && s.el.pause());
+          if (audioEl) audioEl.pause();
+          const cleanup = () => { if (audioCtx) audioCtx.close(); };
+          resolve(cleanup);
+          return;
+        }
+        let acc = 0, idx = 0;
+        while (idx < scenes.length - 1 && elapsed >= acc + scenes[idx].duration) { acc += scenes[idx].duration; idx++; }
+        const s = scenes[idx];
+        if (idx !== current) {
+          if (current >= 0 && scenes[current].kind === 'video') scenes[current].el.pause();
+          if (s.kind === 'video') { s.el.currentTime = 0; s.el.play().catch(() => {}); }
+          current = idx;
+        }
+        drawScene(s, idx, elapsed - acc);
+        // Fade the audio out over the last 1.5 seconds.
+        if (gain) gain.gain.value = Math.max(0, Math.min(1, (total - elapsed) / 1.5));
+        $('bar').style.width = `${(elapsed / total) * 100}%`;
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+  }
+
+  $('preview-btn').onclick = async () => {
+    if (!state.scenes.length) { setStatus('Agrega al menos una escena primero.', true); return; }
+    setBusy(true);
+    try {
+      await prepareAll();
+      setStatus('Reproduciendo vista previa…');
+      const cleanup = await runTimeline(async () => null);
+      cleanup();
+      setStatus('Vista previa terminada. Si te gusta, toca «Crear video».');
+    } catch (e) {
+      setStatus('No pude cargar alguna escena. Elimínala o prueba otra.', true);
+    }
+    setBusy(false);
+    $('bar').style.width = '0';
+    drawIdle();
+  };
+
+  $('export-btn').onclick = async () => {
+    if (!state.scenes.length) { setStatus('Agrega al menos una escena primero.', true); return; }
+    if (!window.MediaRecorder || !canvas.captureStream) {
+      setStatus('Tu navegador no puede grabar video. Usa Safari actualizado (iOS 15 o más reciente) o Chrome.', true);
+      return;
+    }
+    const mime = pickMime();
+    setBusy(true);
+    $('result').innerHTML = '';
+    let wakeLock = null;
+    try {
+      if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen').catch(() => null);
+      await prepareAll();
+      setStatus('Grabando tu video… no cierres esta página.');
+      const chunks = [];
+      let recorder;
+      const cleanup = await runTimeline(async (audioDest) => {
+        const stream = canvas.captureStream(30);
+        if (audioDest) audioDest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+        recorder = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: 8_000_000 });
+        recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        recorder.start(1000);
+        return null;
+      });
+      await new Promise((r) => { recorder.onstop = r; recorder.stop(); });
+      cleanup();
+      const type = recorder.mimeType || mime || 'video/webm';
+      const ext = type.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(chunks, { type });
+      showResult(blob, ext);
+      setStatus('¡Listo! Tu video está abajo.');
+    } catch (e) {
+      console.error(e);
+      setStatus('Hubo un problema creando el video: ' + (e.message || e), true);
+    }
+    if (wakeLock) wakeLock.release().catch(() => {});
+    setBusy(false);
+    $('bar').style.width = '0';
+    drawIdle();
+  };
+
+  function showResult(blob, ext) {
+    const url = URL.createObjectURL(blob);
+    const name = `espacio-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.${ext}`;
+    const file = new File([blob], name, { type: blob.type });
+    const box = $('result');
+    box.innerHTML = `
+      <video controls playsinline></video>
+      <div class="row" style="margin-top:10px">
+        <a class="btn accent" download="${name}">⬇️ Descargar</a>
+        <button id="share-btn">📤 Compartir / Guardar en Fotos</button>
+      </div>
+      <p class="muted">${(blob.size / 1048576).toFixed(1)} MB · ${ext.toUpperCase()}${ext === 'webm' ? ' — si tu app no acepta WEBM, conviértelo a MP4 o usa Safari.' : ''}</p>`;
+    box.querySelector('video').src = url;
+    box.querySelector('a').href = url;
+    const share = box.querySelector('#share-btn');
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      share.onclick = () => navigator.share({ files: [file], title: 'Mi video del espacio' }).catch(() => {});
+    } else {
+      share.style.display = 'none';
+    }
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------- Init ----------
+  load();
+  $('handle').value = state.handle;
+  applyFormat();
+  renderScenes();
+  // Re-download saved NASA scenes in the background so they're ready.
+  state.scenes.forEach((s) => prepareScene(s).then(() => drawIdle()).catch(() => {}));
+  if (document.fonts) document.fonts.ready.then(drawIdle);
+})();
+</script>
+</body>
+</html>
