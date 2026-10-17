@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05060f">
+  <title>Buscador Catastro CRIM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #05060f;
+      --panel: #11131f;
+      --panel-2: #1a1d2c;
+      --line: #2a2e42;
+      --text: #f2f3f8;
+      --muted: #9aa0b8;
+      --accent: #66ffcc;
+      --accent-2: #7b6cff;
+      --danger: #ff6b81;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', system-ui, sans-serif;
+      background: radial-gradient(circle at 20% 0%, #10304a 0%, var(--bg) 55%);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header, main { max-width: 1100px; margin: auto; padding: 0 16px; }
+    header { padding-top: calc(16px + env(safe-area-inset-top)); }
+    header h1 { margin: 0; font-size: 1.4em; }
+    header h1 span { color: var(--accent); }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: .85em; }
+    main { padding-bottom: 80px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1em; display: flex; align-items: center; gap: 8px; }
+    .step {
+      background: var(--accent); color: #05060f; border-radius: 50%;
+      width: 22px; height: 22px; display: inline-grid; place-items: center; font-size: .75em;
+    }
+    label { display: block; font-size: .8em; color: var(--muted); margin: 8px 0 4px; }
+    input, select {
+      width: 100%; background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; font-size: 16px;
+    }
+    button {
+      font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 11px 14px;
+      background: var(--accent); color: #05060f; cursor: pointer;
+    }
+    button.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+    button:disabled { opacity: .5; cursor: default; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+    .row > * { flex: 1 1 160px; }
+    .row > button { flex: 0 0 auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 12px; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .chip {
+      font-size: .78em; padding: 6px 10px; border-radius: 999px; cursor: pointer;
+      background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    }
+    .chip.on { background: var(--accent); color: #05060f; border-color: var(--accent); }
+    .muted { color: var(--muted); font-size: .8em; }
+    .status { margin-top: 8px; font-size: .85em; color: var(--muted); min-height: 1.2em; }
+    .status.err { color: var(--danger); }
+    .status.ok { color: var(--accent); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .stat { background: var(--panel-2); border-radius: 12px; padding: 10px; }
+    .stat b { display: block; font-size: 1.25em; color: var(--accent); margin-top: 2px; }
+    .tablewrap { overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid var(--line); }
+    table { border-collapse: collapse; width: 100%; font-size: .82em; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { background: var(--panel-2); position: sticky; top: 0; cursor: pointer; user-select: none; }
+    th.sorted { color: var(--accent); }
+    td.num, th.num { text-align: right; }
+    tr:hover td { background: #161a2a; }
+    a { color: var(--accent); }
+    details summary { cursor: pointer; color: var(--muted); font-size: .85em; }
+    .layers { max-height: 260px; overflow: auto; margin-top: 8px; }
+    .layers div { padding: 6px 8px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: .85em; }
+    .layers div:hover { background: var(--panel-2); }
+    .bar { height: 6px; background: var(--accent-2); border-radius: 3px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Buscador <span>Catastro CRIM</span></h1>
+  <p>Busca propiedades por nombre de dueño, últimas compras, precio y municipio usando los servicios públicos del Catastro Digital del CRIM.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="step">1</span> Fuente de datos</h2>
+    <label for="layerUrl">URL de la capa ArcGIS (…/MapServer/N o …/FeatureServer/N)</label>
+    <div class="row">
+      <input id="layerUrl" type="text" placeholder="https://…/rest/services/…/MapServer/0" autocomplete="off">
+      <button id="connectBtn">Conectar</button>
+    </div>
+    <div class="chips" id="presets"></div>
+    <details style="margin-top:10px">
+      <summary>Buscar capas en un servidor</summary>
+      <div class="row" style="margin-top:8px">
+        <input id="rootUrl" type="text" value="https://catastro.crimpr.net/server/rest/services">
+        <button class="ghost" id="discoverBtn">Explorar</button>
+      </div>
+      <div class="layers" id="layers"></div>
+      <p class="muted">Consejo: en <a href="https://catastro.crimpr.net/cdprpc/" target="_blank" rel="noopener">catastro.crimpr.net/cdprpc</a> abre las herramientas de desarrollador (F12 → Network), haz una búsqueda por dueño y copia la URL que termina en <code>/query</code> (sin <code>/query</code>) en el campo de arriba.</p>
+    </details>
+    <div class="status" id="connStatus"></div>
+  </section>
+
+  <section class="card hidden" id="mapCard">
+    <details>
+      <summary>Campos detectados (ajusta si alguno está mal)</summary>
+      <div class="grid" id="mapping"></div>
+    </details>
+  </section>
+
+  <section class="card hidden" id="filterCard">
+    <h2><span class="step">2</span> Filtros</h2>
+    <div class="grid">
+      <div><label for="fName">Nombre del dueño</label><input id="fName" type="text" placeholder="Ej. RIVERA LOPEZ"></div>
+      <div><label for="fMuni">Municipio</label><select id="fMuni"><option value="">Todos</option></select></div>
+      <div><label for="fBarrio">Barrio</label><input id="fBarrio" type="text" placeholder="Opcional"></div>
+      <div><label for="fFrom">Compra desde</label><input id="fFrom" type="date"></div>
+      <div><label for="fTo">Compra hasta</label><input id="fTo" type="date"></div>
+      <div><label for="fMin">Precio mínimo ($)</label><input id="fMin" type="number" min="0" step="1000"></div>
+      <div><label for="fMax">Precio máximo ($)</label><input id="fMax" type="number" min="0" step="1000"></div>
+      <div><label for="fSort">Ordenar por</label><select id="fSort"></select></div>
+    </div>
+    <div class="chips" id="quickDates">
+      <span class="chip" data-days="30">Últimos 30 días</span>
+      <span class="chip" data-days="90">Últimos 3 meses</span>
+      <span class="chip" data-days="365">Último año</span>
+      <span class="chip" data-days="1825">Últimos 5 años</span>
+      <span class="chip" data-days="0">Cualquier fecha</span>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="searchBtn">Buscar</button>
+      <button class="ghost" id="clearBtn">Limpiar</button>
+    </div>
+    <div class="status" id="searchStatus"></div>
+  </section>
+
+  <section class="card hidden" id="summaryCard">
+    <h2><span class="step">3</span> Resumen</h2>
+    <div class="stats" id="stats"></div>
+    <div id="byMuniWrap" class="hidden">
+      <h2 style="margin-top:16px">Por municipio</h2>
+      <div class="tablewrap"><table id="byMuni"></table></div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="resultsCard">
+    <h2><span class="step">4</span> Resultados</h2>
+    <div class="row">
+      <span class="muted" id="pageInfo"></span>
+      <button class="ghost" id="prevBtn">‹ Anterior</button>
+      <button class="ghost" id="nextBtn">Siguiente ›</button>
+      <button class="ghost" id="csvBtn">Exportar CSV</button>
+    </div>
+    <div class="tablewrap"><table id="results"></table></div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const PAGE = 100;
+  const CSV_MAX = 5000;
+
+  const PRESETS = [
+    ['CRIM Parcelario (SIGE)', 'https://sige.pr.gov/server/rest/services/crim/crim_parcelas/FeatureServer/0'],
+    ['CRIM Parcelario (SIGE JP)', 'https://sigejp.pr.gov/server/rest/services/crim/crim_parcelas/MapServer/0'],
+    ['CRIM Tasaciones', 'https://www.satasgis.crimpr.net/crimgis/rest/services/Mapas/Tasaciones/MapServer/0'],
+    ['CRIM Parcelas Etiquetas', 'https://www.satasgis.crimpr.net/crimgis/rest/services/Mapas/ParcelasEtiquetas/MapServer/0'],
+  ];
+
+  const MUNICIPIOS = ['ADJUNTAS','AGUADA','AGUADILLA','AGUAS BUENAS','AIBONITO','ANASCO','ARECIBO','ARROYO','BARCELONETA','BARRANQUITAS','BAYAMON','CABO ROJO','CAGUAS','CAMUY','CANOVANAS','CAROLINA','CATANO','CAYEY','CEIBA','CIALES','CIDRA','COAMO','COMERIO','COROZAL','CULEBRA','DORADO','FAJARDO','FLORIDA','GUANICA','GUAYAMA','GUAYANILLA','GUAYNABO','GURABO','HATILLO','HORMIGUEROS','HUMACAO','ISABELA','JAYUYA','JUANA DIAZ','JUNCOS','LAJAS','LARES','LAS MARIAS','LAS PIEDRAS','LOIZA','LUQUILLO','MANATI','MARICAO','MAUNABO','MAYAGUEZ','MOCA','MOROVIS','NAGUABO','NARANJITO','OROCOVIS','PATILLAS','PENUELAS','PONCE','QUEBRADILLAS','RINCON','RIO GRANDE','SABANA GRANDE','SALINAS','SAN GERMAN','SAN JUAN','SAN LORENZO','SAN SEBASTIAN','SANTA ISABEL','TOA ALTA','TOA BAJA','TRUJILLO ALTO','UTUADO','VEGA ALTA','VEGA BAJA','VIEQUES','VILLALBA','YABUCOA','YAUCO'];
+
+  // Roles the search understands, each detected from field name + alias.
+  const NUMERIC = ['esriFieldTypeDouble','esriFieldTypeSingle','esriFieldTypeInteger','esriFieldTypeSmallInteger','esriFieldTypeBigInteger'];
+  const ROLES = [
+    { key: 'owner', label: 'Dueño', re: /due[nñ]o|owner|propiet|titular|contribuy|nombre/i },
+    { key: 'catastro', label: 'Núm. catastro', re: /catastr|cadastr|num_?cat|parcel_?id|^parcel/i },
+    { key: 'muni', label: 'Municipio', re: /munic|pueblo|^muni/i },
+    { key: 'barrio', label: 'Barrio', re: /barrio|sector/i },
+    { key: 'addr', label: 'Dirección', re: /direc|address|dir_?fis|calle/i },
+    { key: 'date', label: 'Fecha de compra', re: /(fech|date|f_).*(vent|compr|sale|trans|escrit|adqui)|(vent|compr|sale|adqui).*(fech|date)/i, types: ['esriFieldTypeDate', 'esriFieldTypeDateOnly', ...NUMERIC, 'esriFieldTypeString'] },
+    { key: 'price', label: 'Precio de compra', re: /precio|sale_?(price|amt|amount)|(venta|compra).*(monto|valor|precio)|monto.*(venta|compra)|considera/i, types: NUMERIC },
+    { key: 'value', label: 'Valor tasado', re: /valor|tasac|apprais|assess|total/i, types: NUMERIC },
+    { key: 'area', label: 'Cabida / área', re: /cabida|area|acre|sq|metro/i, types: NUMERIC },
+  ];
+
+  const state = { url: '', layer: null, map: {}, where: '1=1', offset: 0, total: 0, rows: [], sort: null };
+
+  // ---------- networking: fetch with JSONP fallback (many ArcGIS servers lack CORS) ----------
+  let jsonpSeq = 0;
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = '__crimcb' + (++jsonpSeq);
+      const s = document.createElement('script');
+      const done = () => { delete window[cb]; s.remove(); clearTimeout(t); };
+      const t = setTimeout(() => { done(); reject(new Error('Tiempo de espera agotado')); }, 30000);
+      window[cb] = (data) => { done(); resolve(data); };
+      s.onerror = () => { done(); reject(new Error('No se pudo contactar el servidor')); };
+      s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+      document.head.appendChild(s);
+    });
+  }
+  async function arcgis(url, params = {}) {
+    const qs = new URLSearchParams({ f: 'json', ...params }).toString();
+    const full = url + (url.includes('?') ? '&' : '?') + qs;
+    let data;
+    try {
+      const r = await fetch(full);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      data = await r.json();
+    } catch (e) {
+      data = await jsonp(full);
+    }
+    if (data && data.error) throw new Error(data.error.message + (data.error.details?.length ? ' — ' + data.error.details.join(' ') : ''));
+    return data;
+  }
+
+  // ---------- helpers ----------
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sqlStr = (s) => "'" + String(s).replace(/'/g, "''") + "'";
+  const money = (n) => n == null || isNaN(n) ? '—' : '$' + Math.round(n).toLocaleString('es-PR');
+  const num = (n) => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('es-PR');
+  const field = (role) => state.map[role] ? state.layer.fields.find((f) => f.name === state.map[role]) : null;
+  const isDateType = (f) => f && /Date/.test(f.type);
+  const isNum = (f) => f && NUMERIC.includes(f.type);
+  function setStatus(id, msg, kind = '') { const el = $(id); el.textContent = msg; el.className = 'status ' + kind; }
+
+  function fmtValue(f, v) {
+    if (v == null || v === '') return '';
+    if (f.domain?.codedValues) { const c = f.domain.codedValues.find((c) => c.code === v); if (c) return c.name; }
+    if (isDateType(f)) { const d = new Date(v); return isNaN(d) ? v : d.toISOString().slice(0, 10); }
+    if (isNum(f)) return f.name === state.map.price || f.name === state.map.value ? money(v) : num(v);
+    return v;
+  }
+
+  function detect(fields) {
+    const map = {}, used = new Set();
+    for (const role of ROLES) {
+      const cands = fields.filter((f) => !used.has(f.name) && (!role.types || role.types.includes(f.type)) && role.re.test(f.name + ' ' + (f.alias || '')));
+      // prefer true date fields for the purchase date
+      cands.sort((a, b) => (isDateType(b) ? 1 : 0) - (isDateType(a) ? 1 : 0));
+      if (cands[0]) { map[role.key] = cands[0].name; used.add(cands[0].name); }
+    }
+    return map;
+  }
+
+  // ---------- step 1: connect ----------
+  async function connect(url) {
+    url = url.trim().replace(/\/query\/?(\?.*)?$/, '').replace(/\?.*$/, '').replace(/\/$/, '');
+    if (!/\/\d+$/.test(url)) { setStatus('connStatus', 'La URL debe terminar en el número de capa, ej. …/MapServer/0', 'err'); return; }
+    $('layerUrl').value = url;
+    setStatus('connStatus', 'Conectando…');
+    try {
+      const layer = await arcgis(url);
+      if (!layer.fields) throw new Error('La capa no expone campos consultables');
+      state.url = url;
+      state.layer = layer;
+      state.oid = layer.objectIdField || layer.fields.find((f) => f.type === 'esriFieldTypeOID')?.name;
+      const saved = load('map:' + url);
+      state.map = saved && Object.values(saved).every((n) => !n || layer.fields.some((f) => f.name === n)) ? saved : detect(layer.fields);
+      save('url', url);
+      renderMapping();
+      onMappingChange();
+      ['mapCard', 'filterCard'].forEach((id) => $(id).classList.remove('hidden'));
+      const caps = layer.advancedQueryCapabilities || {};
+      setStatus('connStatus', `Conectado: “${layer.name}” — ${layer.fields.length} campos` + (caps.supportsStatistics === false ? ' (sin estadísticas)' : ''), 'ok');
+      history.replaceState(null, '', '?capa=' + encodeURIComponent(url));
+    } catch (e) {
+      setStatus('connStatus', 'Error: ' + e.message, 'err');
+    }
+  }
+
+  async function discover(root) {
+    root = root.trim().replace(/\/$/, '');
+    const box = $('layers');
+    box.innerHTML = '<div class="muted">Explorando…</div>';
+    const out = [];
+    try {
+      const top = await arcgis(root);
+      const folders = [''].concat(top.folders || []);
+      for (const folder of folders) {
+        const d = folder ? await arcgis(root + '/' + folder) : top;
+        for (const s of d.services || []) {
+          if (!/MapServer|FeatureServer/.test(s.type)) continue;
+          const sUrl = root + '/' + s.name + '/' + s.type;
+          try {
+            const info = await arcgis(sUrl);
+            for (const l of (info.layers || []).concat(info.tables || [])) if (!l.subLayerIds) out.push({ url: sUrl + '/' + l.id, name: s.name + ' › ' + l.name });
+          } catch (_) { /* skip secured services */ }
+          box.innerHTML = out.map((o) => `<div data-url="${esc(o.url)}">${esc(o.name)}</div>`).join('') || '<div class="muted">Buscando…</div>';
+        }
+      }
+      if (!out.length) box.innerHTML = '<div class="muted">No se encontraron capas públicas.</div>';
+    } catch (e) {
+      box.innerHTML = `<div class="muted">Error: ${esc(e.message)}</div>`;
+    }
+  }
+
+  // ---------- field mapping ----------
+  function renderMapping() {
+    const opts = (sel) => '<option value="">(ninguno)</option>' + state.layer.fields.map((f) =>
+      `<option value="${esc(f.name)}"${f.name === sel ? ' selected' : ''}>${esc(f.alias && f.alias !== f.name ? `${f.alias} (${f.name})` : f.name)}</option>`).join('');
+    $('mapping').innerHTML = ROLES.map((r) => `<div><label>${r.label}</label><select data-role="${r.key}">${opts(state.map[r.key])}</select></div>`).join('');
+  }
+
+  async function onMappingChange() {
+    save('map:' + state.url, state.map);
+    // sort choices
+    const sorts = [];
+    if (state.map.date) sorts.push(['date DESC', 'Compra más reciente'], ['date ASC', 'Compra más antigua']);
+    if (state.map.price) sorts.push(['price DESC', 'Precio mayor'], ['price ASC', 'Precio menor']);
+    if (state.map.value) sorts.push(['value DESC', 'Valor tasado mayor']);
+    if (state.map.owner) sorts.push(['owner ASC', 'Dueño A–Z']);
+    if (state.map.muni) sorts.push(['muni ASC', 'Municipio A–Z']);
+    sorts.push(['', 'Sin orden']);
+    $('fSort').innerHTML = sorts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+    // disable filters with no field behind them
+    $('fName').disabled = !state.map.owner;
+    $('fBarrio').disabled = !state.map.barrio;
+    $('fFrom').disabled = $('fTo').disabled = !state.map.date;
+    $('fMin').disabled = $('fMax').disabled = !(state.map.price || state.map.value);
+    $('fMin').previousElementSibling.textContent = state.map.price ? 'Precio mínimo ($)' : 'Valor tasado mínimo ($)';
+    $('fMax').previousElementSibling.textContent = state.map.price ? 'Precio máximo ($)' : 'Valor tasado máximo ($)';
+    await loadMunicipios();
+  }
+
+  async function loadMunicipios() {
+    const sel = $('fMuni'), f = field('muni');
+    sel.disabled = !f;
+    if (!f) { sel.innerHTML = '<option value="">Todos</option>'; return; }
+    let list;
+    if (f.domain?.codedValues) list = f.domain.codedValues.map((c) => [c.code, c.name]);
+    else {
+      try {
+        const d = await arcgis(state.url + '/query', { where: '1=1', outFields: f.name, returnDistinctValues: true, returnGeometry: false, orderByFields: f.name });
+        list = (d.features || []).map((x) => x.attributes[f.name]).filter((v) => v != null && v !== '').map((v) => [v, v]);
+      } catch (_) { /* fall back below */ }
+      if (!list?.length) list = MUNICIPIOS.map((m) => ['~' + m, m]);
+    }
+    sel.innerHTML = '<option value="">Todos</option>' + list.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  }
+
+  // ---------- step 2: build where ----------
+  function dateSql(f, iso, op) {
+    if (isDateType(f)) return `${f.name} ${op} DATE ${sqlStr(iso)}`;
+    if (isNum(f)) return `${f.name} ${op} ${iso.replace(/-/g, '')}`; // yyyymmdd stored as number
+    return `${f.name} ${op} ${sqlStr(iso)}`; // ISO-like strings compare lexically
+  }
+
+  function buildWhere() {
+    const w = [];
+    const name = $('fName').value.trim().toUpperCase();
+    if (name && state.map.owner) {
+      // every word must appear, in any order: "RIVERA JUAN" finds "JUAN RIVERA"
+      for (const word of name.split(/\s+/)) w.push(`UPPER(${state.map.owner}) LIKE ${sqlStr('%' + word + '%')}`);
+    }
+    const muni = $('fMuni').value, mf = field('muni');
+    if (muni && mf) {
+      if (muni.startsWith('~')) w.push(`UPPER(${mf.name}) LIKE ${sqlStr('%' + muni.slice(1) + '%')}`);
+      else w.push(`${mf.name} = ${isNum(mf) ? Number(muni) : sqlStr(muni)}`);
+    }
+    const barrio = $('fBarrio').value.trim().toUpperCase();
+    if (barrio && state.map.barrio) w.push(`UPPER(${state.map.barrio}) LIKE ${sqlStr('%' + barrio + '%')}`);
+    const df = field('date');
+    if (df && $('fFrom').value) w.push(dateSql(df, $('fFrom').value, '>='));
+    if (df && $('fTo').value) w.push(dateSql(df, $('fTo').value, '<='));
+    const pf = state.map.price || state.map.value;
+    if (pf && $('fMin').value !== '') w.push(`${pf} >= ${Number($('fMin').value)}`);
+    if (pf && $('fMax').value !== '') w.push(`${pf} <= ${Number($('fMax').value)}`);
+    return w.length ? w.join(' AND ') : '1=1';
+  }
+
+  function orderBy() {
+    const [role, dir] = (state.sort || $('fSort').value).split(' ');
+    const name = state.map[role] || role;
+    return name && state.layer.fields.some((f) => f.name === name) ? `${name} ${dir || 'ASC'}` : '';
+  }
+
+  // ---------- step 3/4: run ----------
+  async function search() {
+    state.where = buildWhere();
+    state.offset = 0;
+    state.sort = null;
+    $('searchBtn').disabled = true;
+    setStatus('searchStatus', 'Buscando…');
+    try {
+      const c = await arcgis(state.url + '/query', { where: state.where, returnCountOnly: true });
+      state.total = c.count ?? 0;
+      setStatus('searchStatus', `${num(state.total)} propiedades encontradas`, 'ok');
+      $('resultsCard').classList.remove('hidden');
+      await Promise.all([loadPage(), loadSummary()]);
+    } catch (e) {
+      setStatus('searchStatus', 'Error: ' + e.message, 'err');
+    } finally {
+      $('searchBtn').disabled = false;
+    }
+  }
+
+  function displayFields() {
+    const roleFields = ROLES.map((r) => state.map[r.key]).filter(Boolean);
+    return roleFields.length ? roleFields : state.layer.fields.filter((f) => f.type !== 'esriFieldTypeGeometry').slice(0, 10).map((f) => f.name);
+  }
+
+  async function fetchRows(offset, count, withGeom) {
+    const p = { where: state.where, outFields: '*', returnGeometry: !!withGeom, resultRecordCount: count };
+    if (withGeom) Object.assign(p, { outSR: 4326, geometryPrecision: 5, maxAllowableOffset: 0.0001 });
+    const ob = orderBy();
+    if (ob) p.orderByFields = ob;
+    if (offset) p.resultOffset = offset;
+    const d = await arcgis(state.url + '/query', p);
+    return d.features || [];
+  }
+
+  async function loadPage() {
+    const feats = await fetchRows(state.offset, PAGE, true);
+    state.rows = feats;
+    const cols = displayFields().map((n) => state.layer.fields.find((f) => f.name === n));
+    const ob = orderBy().split(' ')[0];
+    $('results').innerHTML =
+      '<thead><tr>' + cols.map((f) => `<th data-f="${esc(f.name)}" class="${isNum(f) ? 'num' : ''} ${f.name === ob ? 'sorted' : ''}">${esc(f.alias || f.name)}</th>`).join('') + '<th>Mapa</th></tr></thead><tbody>' +
+      feats.map((ft) => '<tr>' + cols.map((f) => `<td class="${isNum(f) ? 'num' : ''}">${esc(fmtValue(f, ft.attributes[f.name]))}</td>`).join('') +
+        `<td>${mapLink(ft.geometry)}</td></tr>`).join('') + '</tbody>';
+    const end = Math.min(state.offset + feats.length, state.total);
+    $('pageInfo').textContent = feats.length ? `${num(state.offset + 1)}–${num(end)} de ${num(state.total)}` : 'Sin resultados';
+    $('prevBtn').disabled = state.offset === 0;
+    $('nextBtn').disabled = end >= state.total;
+  }
+
+  function mapLink(g) {
+    const pts = g?.rings?.[0] || (g && g.x != null ? [[g.x, g.y]] : null);
+    if (!pts?.length) return '';
+    const x = pts.reduce((s, p) => s + p[0], 0) / pts.length, y = pts.reduce((s, p) => s + p[1], 0) / pts.length;
+    return `<a href="https://www.google.com/maps?q=${y.toFixed(6)},${x.toFixed(6)}" target="_blank" rel="noopener">Ver</a>`;
+  }
+
+  async function loadSummary() {
+    $('summaryCard').classList.remove('hidden');
+    const pf = state.map.price, vf = state.map.value, df = field('date');
+    const stats = [{ statisticType: 'count', onStatisticField: state.oid || state.layer.fields[0].name, outStatisticFieldName: 'n' }];
+    if (pf) stats.push({ statisticType: 'sum', onStatisticField: pf, outStatisticFieldName: 'psum' }, { statisticType: 'avg', onStatisticField: pf, outStatisticFieldName: 'pavg' }, { statisticType: 'max', onStatisticField: pf, outStatisticFieldName: 'pmax' });
+    if (vf) stats.push({ statisticType: 'avg', onStatisticField: vf, outStatisticFieldName: 'vavg' });
+    if (df) stats.push({ statisticType: 'max', onStatisticField: df.name, outStatisticFieldName: 'dmax' });
+    const tile = (t, v) => `<div class="stat"><span class="muted">${t}</span><b>${v}</b></div>`;
+    try {
+      const d = await arcgis(state.url + '/query', { where: state.where, outStatistics: JSON.stringify(stats), returnGeometry: false });
+      const a = lower(d.features?.[0]?.attributes || {});
+      $('stats').innerHTML = tile('Propiedades', num(a.n ?? state.total)) +
+        (pf ? tile('Total comprado', money(a.psum)) + tile('Precio promedio', money(a.pavg)) + tile('Precio más alto', money(a.pmax)) : '') +
+        (vf ? tile('Valor tasado promedio', money(a.vavg)) : '') +
+        (df && a.dmax != null ? tile('Compra más reciente', fmtValue(df, a.dmax)) : '');
+    } catch (e) {
+      $('stats').innerHTML = tile('Propiedades', num(state.total)) + `<div class="muted">Estadísticas no disponibles: ${esc(e.message)}</div>`;
+    }
+    const mf = field('muni');
+    $('byMuniWrap').classList.toggle('hidden', !mf);
+    if (!mf) return;
+    try {
+      const d = await arcgis(state.url + '/query', {
+        where: state.where, outStatistics: JSON.stringify(stats.filter((s) => s.outStatisticFieldName !== 'pmax')),
+        groupByFieldsForStatistics: mf.name, orderByFields: 'n DESC', returnGeometry: false,
+      });
+      const rows = (d.features || []).map((f) => ({ ...lower(f.attributes), muni: f.attributes[mf.name] ?? f.attributes[mf.name.toLowerCase()] }));
+      rows.sort((a, b) => b.n - a.n);
+      const max = Math.max(1, ...rows.map((r) => r.n));
+      $('byMuni').innerHTML = `<thead><tr><th>Municipio</th><th class="num">Propiedades</th><th></th>${pf ? '<th class="num">Total comprado</th><th class="num">Promedio</th>' : ''}${df ? '<th>Última compra</th>' : ''}</tr></thead><tbody>` +
+        rows.map((r) => `<tr><td>${esc(fmtValue(mf, r.muni))}</td><td class="num">${num(r.n)}</td><td style="width:30%"><div class="bar" style="width:${(100 * r.n / max).toFixed(1)}%"></div></td>` +
+          (pf ? `<td class="num">${money(r.psum)}</td><td class="num">${money(r.pavg)}</td>` : '') + (df ? `<td>${esc(fmtValue(df, r.dmax))}</td>` : '') + '</tr>').join('') + '</tbody>';
+    } catch (e) {
+      $('byMuni').innerHTML = `<tbody><tr><td class="muted">Agrupación no disponible: ${esc(e.message)}</td></tr></tbody>`;
+    }
+  }
+  const lower = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k.toLowerCase(), v]));
+
+  async function exportCsv() {
+    const btn = $('csvBtn');
+    btn.disabled = true;
+    try {
+      const max = Math.min(state.total, CSV_MAX), step = state.layer.maxRecordCount || 1000, all = [];
+      for (let off = 0; off < max; off += step) {
+        btn.textContent = `Exportando ${num(off)}…`;
+        const chunk = await fetchRows(off, Math.min(step, max - off), false);
+        all.push(...chunk);
+        if (chunk.length < Math.min(step, max - off)) break;
+      }
+      const fields = state.layer.fields.filter((f) => f.type !== 'esriFieldTypeGeometry');
+      const cell = (v) => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+      const csv = [fields.map((f) => cell(f.alias || f.name)).join(',')]
+        .concat(all.map((ft) => fields.map((f) => cell(isDateType(f) ? fmtValue(f, ft.attributes[f.name]) : ft.attributes[f.name] ?? '')).join(',')))
+        .join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = 'catastro-crim.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      setStatus('searchStatus', 'Error exportando: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Exportar CSV';
+    }
+  }
+
+  // ---------- storage ----------
+  function save(k, v) { try { localStorage.setItem('crim:' + k, JSON.stringify(v)); } catch (_) {} }
+  function load(k) { try { return JSON.parse(localStorage.getItem('crim:' + k)); } catch (_) { return null; } }
+
+  // ---------- wiring ----------
+  $('presets').innerHTML = PRESETS.map(([t, u]) => `<span class="chip" data-url="${esc(u)}">${esc(t)}</span>`).join('');
+  $('presets').onclick = (e) => { const u = e.target.dataset.url; if (u) connect(u); };
+  $('layers').onclick = (e) => { const u = e.target.dataset.url; if (u) connect(u); };
+  $('connectBtn').onclick = () => connect($('layerUrl').value);
+  $('layerUrl').onkeydown = (e) => { if (e.key === 'Enter') connect(e.target.value); };
+  $('discoverBtn').onclick = () => discover($('rootUrl').value);
+  $('mapping').onchange = (e) => { state.map[e.target.dataset.role] = e.target.value; onMappingChange(); };
+  $('searchBtn').onclick = search;
+  $('filterCard').onkeydown = (e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') search(); };
+  $('clearBtn').onclick = () => {
+    ['fName', 'fBarrio', 'fFrom', 'fTo', 'fMin', 'fMax'].forEach((id) => { $(id).value = ''; });
+    $('fMuni').value = '';
+    document.querySelectorAll('#quickDates .chip').forEach((c) => c.classList.remove('on'));
+  };
+  $('quickDates').onclick = (e) => {
+    const days = e.target.dataset.days;
+    if (days == null) return;
+    document.querySelectorAll('#quickDates .chip').forEach((c) => c.classList.toggle('on', c === e.target));
+    $('fTo').value = '';
+    $('fFrom').value = days === '0' ? '' : new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+    if (days !== '0' && state.map.date) $('fSort').value = 'date DESC';
+  };
+  $('prevBtn').onclick = () => { state.offset = Math.max(0, state.offset - PAGE); loadPage().catch((e) => setStatus('searchStatus', 'Error: ' + e.message, 'err')); };
+  $('nextBtn').onclick = () => { state.offset += PAGE; loadPage().catch((e) => setStatus('searchStatus', 'Error: ' + e.message, 'err')); };
+  $('results').onclick = (e) => {
+    const f = e.target.closest('th')?.dataset.f;
+    if (!f) return;
+    const [cur, dir] = orderBy().split(' ');
+    state.sort = `${f} ${cur === f && dir === 'DESC' ? 'ASC' : 'DESC'}`;
+    state.offset = 0;
+    loadPage().catch((err) => setStatus('searchStatus', 'Error: ' + err.message, 'err'));
+  };
+  $('csvBtn').onclick = exportCsv;
+
+  const initial = new URLSearchParams(location.search).get('capa') || load('url');
+  $('layerUrl').value = initial || PRESETS[0][1];
+  if (initial) connect(initial);
+})();
+</script>
+</body>
+</html>
